@@ -1,0 +1,61 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: escall-mysql
+    restart: unless-stopped
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: escall_avance3
+      MYSQL_USER: escall_app
+      MYSQL_PASSWORD: escall_password_2026
+      MYSQL_ROOT_PASSWORD: escall_root_password_2026
+    ports:
+      - "3310:3306"
+    volumes:
+      - ./database/01_esquema.sql:/docker-entrypoint-initdb.d/01_esquema.sql:ro
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pescall_root_password_2026"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: escall-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      MYSQL_URL: jdbc:mysql://mysql:3306/escall_avance3?serverTimezone=America/Lima&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+      MYSQL_USER: escall_app
+      MYSQL_PASSWORD: escall_password_2026
+      JWT_SECRETO: escall-crm-secreto-jwt-super-seguro-2026-clave-aleatoria-32-bytes
+      ADMIN_USUARIO: admin
+      ADMIN_PASSWORD: Admin12345
+      DATOS_DEMO: "true"
+      CORS_ORIGENES: http://localhost:4200,http://127.0.0.1:4200,http://localhost:80,http://localhost
+      PORT: 8080
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: escall-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
+
+volumes:
+  mysql_data:
