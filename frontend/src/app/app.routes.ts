@@ -1,22 +1,20 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth.guard';
-import { LoginPage } from './pages/login/login';
-import { ConexionPage } from './pages/conexion/conexion';
-import { ClientesPage } from './pages/clientes/clientes';
-import { DetallePage } from './pages/detalle/detalle';
-import { DashboardPage } from './pages/dashboard/dashboard';
-import { ReportesPage } from './pages/reportes/reportes';
-import { UsuariosPage } from './pages/usuarios/usuarios';
-import { ImportacionesPage } from './pages/importaciones/importaciones';
-export const routes:Routes=[
-  {path:'',pathMatch:'full',redirectTo:'clientes'},
-  {path:'login',component:LoginPage},
-  {path:'conexion',component:ConexionPage},
-  {path:'clientes',component:ClientesPage,canActivate:[authGuard]},
-  {path:'clientes/:id',component:DetallePage,canActivate:[authGuard]},
-  {path:'dashboard',component:DashboardPage,canActivate:[authGuard],data:{roles:['ADMIN','SUPERVISOR']}},
-  {path:'reportes',component:ReportesPage,canActivate:[authGuard],data:{roles:['ADMIN','SUPERVISOR']}},
-  {path:'usuarios',component:UsuariosPage,canActivate:[authGuard],data:{roles:['ADMIN','SUPERVISOR']}},
-  {path:'importaciones',component:ImportacionesPage,canActivate:[authGuard],data:{roles:['ADMIN']}},
-  {path:'**',redirectTo:'clientes'}
+import { MainLayoutComponent } from './layout/main-layout.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { CarteraComponent } from './features/cartera/cartera.component';
+import { ReportesComponent } from './features/reportes/reportes.component';
+
+export const routes: Routes = [
+  {
+    path: '',
+    component: MainLayoutComponent,
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: 'dashboard', component: DashboardComponent },
+      { path: 'cartera', component: CarteraComponent },
+      { path: 'clientes', redirectTo: 'cartera' },
+      { path: 'reportes', component: ReportesComponent }
+    ]
+  },
+  { path: '**', redirectTo: '' }
 ];

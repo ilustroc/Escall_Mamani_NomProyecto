@@ -7,6 +7,7 @@ import com.escall.crm.excepcion.ReglaNegocioException;
 import com.escall.crm.modelo.*;
 import com.escall.crm.repositorio.*;
 import com.escall.crm.seguridad.UsuarioActual;
+import com.escall.crm.util.TextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/** Módulo Resumen (RF03 - RF06) y cartera del asesor. */
+/**
+ * Client Management Service (RF03 - RF06) and advisor portfolio operations.
+ */
 @Service
 @RequiredArgsConstructor
 public class ClienteService {
@@ -35,151 +38,216 @@ public class ClienteService {
     private final Reloj reloj;
     private final AuditoriaService auditoria;
 
-    /** RF03: busca por documento, número de operación o nombre. */
+    /**
+     * RF03: Search clients by document number, operation ID, or client name.
+     */
     @Transactional(readOnly = true)
-    public List<ClienteResumenDto> buscar(String texto) {
-        String limpio = texto == null ? "" : texto.trim();
-        if (limpio.length() < 3) {
+    public List<ClienteResumenDto> search(String query) {
+        String cleanQuery = TextUtils.clean(query);
+        if (cleanQuery == null || cleanQuery.length() < 3) {
             throw new ReglaNegocioException("Escribe al menos 3 caracteres para buscar");
         }
-        String patron = "%" + limpio.toLowerCase(Locale.ROOT) + "%";
-        Usuario u = usuarioActual.obtener();
-        PageRequest limite = PageRequest.of(0, MAX_RESULTADOS);
-        List<Cliente> encontrados = u.getRol() == Rol.ADMIN
-                ? clientes.buscar(patron, limite)
-                : clientes.buscarEnCartera(patron, UsuarioActual.noVacia(usuarioActual.asesoresVisibles(u)), limite);
+        String pattern = "%" + cleanQuery.toLowerCase(Locale.ROOT) + "%";
+        Usuario currentUser = usuarioActual.obtener();
+        PageRequest limit = PageRequest.of(0, MAX_RESULTADOS);
+        List<Cliente> matches = currentUser.getRol() == Rol.ADMIN
+                ? clientes.buscar(pattern, limit)
+                : clientes.buscarEnCartera(pattern, UsuarioActual.noVacia(usuarioActual.asesoresVisibles(currentUser)), limit);
 
-        return encontrados.stream().map(c -> {
-            List<Cuenta> deCliente = cuentas.findByClienteIdOrderByNumeroOperacionAsc(c.getId());
-            BigDecimal deuda = deCliente.stream().map(Cuenta::getDeudaTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return matches.stream().map(c -> {
+            List<Cuenta> clientAccounts = cuentas.findByClienteIdOrderByNumeroOperacionAsc(c.getId());
+            BigDecimal totalDebt = clientAccounts.stream()
+                    .map(Cuenta::getDeudaTotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             return new ClienteResumenDto(c.getId(), c.getTipoDocumento(), c.getDocumento(), c.getNombres(),
-                    deCliente.size(), deuda);
+                    clientAccounts.size(), totalDebt);
         }).toList();
     }
 
-    /** RF04 - RF06: datos, cuentas, historial de gestiones, pagos y promesas del cliente. */
     @Transactional(readOnly = true)
-    public ClienteDetalleDto detalle(Long clienteId) {
-        Cliente c = clientes.findById(clienteId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
-        verificarAcceso(clienteId);
+    public List<ClienteResumenDto> buscar(String texto) {
+        return search(texto);
+    }
 
-        List<Cuenta> deCliente = cuentas.findByClienteIdOrderByNumeroOperacionAsc(clienteId);
-        List<Pago> pagosCliente = pagos.delCliente(clienteId);
-        Map<Long, Usuario> asesorPorCuenta = asesorPorCuenta(deCliente);
-        List<CuentaDto> cuentasDto = deCliente.stream()
-                .map(cu -> aDto(cu, totalPagado(cu.getId(), pagosCliente), asesorPorCuenta.get(cu.getId()), false))
+    /**
+     * RF04 - RF06: Retrieve complete client details, contact information, accounts, and history.
+     */
+    @Transactional(readOnly = true)
+    public ClienteDetalleDto getDetail(Long clientId) {
+        Cliente c = clientes.findById(clientId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
+        verifyAccess(clientId);
+
+        List<Cuenta> clientAccounts = cuentas.findByClienteIdOrderByNumeroOperacionAsc(clientId);
+        List<Pago> clientPayments = pagos.delCliente(clientId);
+        Map<Long, Usuario> advisorByAccount = getAdvisorByAccount(clientAccounts);
+        List<CuentaDto> accountDtos = clientAccounts.stream()
+                .map(acc -> toDto(acc, calculateTotalPaid(acc.getId(), clientPayments), advisorByAccount.get(acc.getId()), false))
                 .toList();
 
-        return new ClienteDetalleDto(c.getId(), c.getTipoDocumento(), c.getDocumento(), c.getNombres(), c.getEmail(),
+        return new ClienteDetalleDto(
+                c.getId(),
+                c.getTipoDocumento(),
+                c.getDocumento(),
+                c.getNombres(),
+                c.getEmail(),
                 c.getDireccion(),
                 c.getTelefonos().stream().filter(Telefono::isActivo).map(TelefonoDto::desde).toList(),
-                cuentasDto,
-                gestiones.historialDelCliente(clienteId).stream().map(g -> GestionDto.desde(g, false)).toList(),
-                pagosCliente.stream().map(p -> PagoDto.desde(p, asesorPorCuenta.get(p.getCuenta().getId()), false)).toList(),
-                promesas.delCliente(clienteId).stream().map(p -> PromesaDto.desde(p, reloj.hoy(), false)).toList());
+                accountDtos,
+                gestiones.historialDelCliente(clientId).stream().map(g -> GestionDto.desde(g, false)).toList(),
+                clientPayments.stream().map(p -> PagoDto.desde(p, advisorByAccount.get(p.getCuenta().getId()), false)).toList(),
+                promesas.delCliente(clientId).stream().map(p -> PromesaDto.desde(p, reloj.today(), false)).toList()
+        );
     }
 
-    /** Cartera del asesor: sus cuentas asignadas, ordenadas por días de mora. */
     @Transactional(readOnly = true)
-    public List<CuentaDto> cartera() {
-        Usuario asesor = usuarioActual.obtener();
-        List<Asignacion> lista = asignaciones.findByAsesorIdAndActivaTrueOrderByCuentaDiasMoraDesc(asesor.getId());
-        List<Long> ids = lista.stream().map(a -> a.getCuenta().getId()).toList();
-        Map<Long, BigDecimal> pagado = ids.isEmpty() ? Map.of() : pagos.totalesPorCuenta(ids).stream()
+    public ClienteDetalleDto detalle(Long clienteId) {
+        return getDetail(clienteId);
+    }
+
+    /**
+     * Advisor portfolio: Assigned accounts ordered by days past due.
+     */
+    @Transactional(readOnly = true)
+    public List<CuentaDto> getPortfolio() {
+        Usuario advisor = usuarioActual.obtener();
+        List<Asignacion> assignments = asignaciones.findByAsesorIdAndActivaTrueOrderByCuentaDiasMoraDesc(advisor.getId());
+        List<Long> accountIds = assignments.stream().map(a -> a.getCuenta().getId()).toList();
+        Map<Long, BigDecimal> paidMap = accountIds.isEmpty() ? Map.of() : pagos.totalesPorCuenta(accountIds).stream()
                 .collect(Collectors.toMap(f -> (Long) f[0], f -> (BigDecimal) f[1]));
-        return lista.stream()
-                .map(a -> aDto(a.getCuenta(), pagado.getOrDefault(a.getCuenta().getId(), BigDecimal.ZERO), asesor, true))
+        return assignments.stream()
+                .map(a -> toDto(a.getCuenta(), paidMap.getOrDefault(a.getCuenta().getId(), BigDecimal.ZERO), advisor, true))
                 .toList();
     }
 
-    /** Promesas pendientes del asesor (incluye las vencidas) para su seguimiento diario. */
     @Transactional(readOnly = true)
-    public List<PromesaDto> agenda() {
-        Usuario asesor = usuarioActual.obtener();
-        return promesas.delAsesorPorEstado(asesor.getId(), EstadoPromesa.PENDIENTE).stream()
-                .map(p -> PromesaDto.desde(p, reloj.hoy(), true)).toList();
+    public List<CuentaDto> cartera() {
+        return getPortfolio();
     }
 
-    /** CRUD - Crear (solo administrador). El cliente nace sin cuentas; las cuentas llegan por Integración de Datos. */
+    /**
+     * Advisor schedule: Pending and overdue payment promises for daily follow-up.
+     */
+    @Transactional(readOnly = true)
+    public List<PromesaDto> getSchedule() {
+        Usuario advisor = usuarioActual.obtener();
+        return promesas.delAsesorPorEstado(advisor.getId(), EstadoPromesa.PENDIENTE).stream()
+                .map(p -> PromesaDto.desde(p, reloj.today(), true)).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PromesaDto> agenda() {
+        return getSchedule();
+    }
+
+    /**
+     * CRUD - Create client (Admin only).
+     */
     @Transactional
-    public ClienteDetalleDto crear(ClienteRequest req) {
-        String documento = req.documento().trim();
-        if (clientes.existsByDocumento(documento)) {
+    public ClienteDetalleDto create(ClienteRequest req) {
+        String document = req.documento().trim();
+        if (clientes.existsByDocumento(document)) {
             throw new ReglaNegocioException("Ya existe un cliente con ese documento");
         }
         Cliente c = new Cliente();
-        c.setTipoDocumento(limpiar(req.tipoDocumento()) == null ? "DNI" : limpiar(req.tipoDocumento()));
-        c.setDocumento(documento);
+        c.setTipoDocumento(TextUtils.clean(req.tipoDocumento()) == null ? "DNI" : TextUtils.clean(req.tipoDocumento()));
+        c.setDocumento(document);
         c.setNombres(req.nombres().trim());
-        c.setEmail(limpiar(req.email()));
-        c.setDireccion(limpiar(req.direccion()));
+        c.setEmail(TextUtils.clean(req.email()));
+        c.setDireccion(TextUtils.clean(req.direccion()));
         c = clientes.save(c);
         auditoria.registrar(usuarioActual.obtener().getUsuario(), "CREAR", "Cliente", c.getId(), c.getDocumento());
-        return detalle(c.getId());
+        return getDetail(c.getId());
     }
 
-    /** CRUD - Actualizar: corrige datos de contacto. Lo puede hacer quien ya ve al cliente (asesor de su cartera, supervisor de su equipo, administrador). */
     @Transactional
-    public ClienteDetalleDto actualizar(Long id, ClienteEdicionRequest req) {
+    public ClienteDetalleDto crear(ClienteRequest req) {
+        return create(req);
+    }
+
+    /**
+     * CRUD - Update client contact details.
+     */
+    @Transactional
+    public ClienteDetalleDto update(Long id, ClienteEdicionRequest req) {
         Cliente c = clientes.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
-        verificarAcceso(id);
+        verifyAccess(id);
         c.setNombres(req.nombres().trim());
-        c.setEmail(limpiar(req.email()));
-        c.setDireccion(limpiar(req.direccion()));
+        c.setEmail(TextUtils.clean(req.email()));
+        c.setDireccion(TextUtils.clean(req.direccion()));
         auditoria.registrar(usuarioActual.obtener().getUsuario(), "EDITAR", "Cliente", id, c.getDocumento());
-        return detalle(id);
+        return getDetail(id);
     }
 
-    /** CRUD - Eliminar (solo administrador). Solo si no tiene cuentas: así nunca se pierde deuda ni historial. */
     @Transactional
-    public void eliminar(Long id) {
+    public ClienteDetalleDto actualizar(Long id, ClienteEdicionRequest req) {
+        return update(id, req);
+    }
+
+    /**
+     * CRUD - Delete client (Admin only, allowed only if client has no associated accounts).
+     */
+    @Transactional
+    public void delete(Long id) {
         Cliente c = clientes.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
         if (cuentas.existsByClienteId(id)) {
             throw new ReglaNegocioException("El cliente tiene cuentas registradas; no se puede eliminar");
         }
-        String documento = c.getDocumento();
+        String document = c.getDocumento();
         clientes.delete(c);
-        auditoria.registrar(usuarioActual.obtener().getUsuario(), "ELIMINAR", "Cliente", id, documento);
+        auditoria.registrar(usuarioActual.obtener().getUsuario(), "ELIMINAR", "Cliente", id, document);
     }
 
-    // ---------------------------------------------------------------- auxiliares
-
-    private static String limpiar(String texto) {
-        return texto == null || texto.isBlank() ? null : texto.trim();
+    @Transactional
+    public void eliminar(Long id) {
+        delete(id);
     }
 
-    private void verificarAcceso(Long clienteId) {
-        Usuario u = usuarioActual.obtener();
-        if (u.getRol() != Rol.ADMIN
-                && !clientes.esVisiblePara(clienteId, UsuarioActual.noVacia(usuarioActual.asesoresVisibles(u)))) {
-            // Mismo mensaje que "no existe": no revelamos clientes de otras carteras
+    // ---------------------------------------------------------------- Helper methods
+
+    private void verifyAccess(Long clientId) {
+        Usuario currentUser = usuarioActual.obtener();
+        if (currentUser.getRol() != Rol.ADMIN
+                && !clientes.esVisiblePara(clientId, UsuarioActual.noVacia(usuarioActual.asesoresVisibles(currentUser)))) {
             throw new RecursoNoEncontradoException("Cliente no encontrado");
         }
     }
 
-    private Map<Long, Usuario> asesorPorCuenta(List<Cuenta> lista) {
-        if (lista.isEmpty()) {
+    private Map<Long, Usuario> getAdvisorByAccount(List<Cuenta> accounts) {
+        if (accounts.isEmpty()) {
             return Map.of();
         }
-        return asignaciones.findByCuentaIdInAndActivaTrue(lista.stream().map(Cuenta::getId).toList()).stream()
+        return asignaciones.findByCuentaIdInAndActivaTrue(accounts.stream().map(Cuenta::getId).toList()).stream()
                 .collect(Collectors.toMap(a -> a.getCuenta().getId(), Asignacion::getAsesor, (a, b) -> a));
     }
 
-    private static BigDecimal totalPagado(Long cuentaId, List<Pago> pagosCliente) {
-        return pagosCliente.stream().filter(p -> p.getCuenta().getId().equals(cuentaId))
-                .map(Pago::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
+    private static BigDecimal calculateTotalPaid(Long accountId, List<Pago> clientPayments) {
+        return clientPayments.stream()
+                .filter(p -> p.getCuenta().getId().equals(accountId))
+                .map(Pago::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private static CuentaDto aDto(Cuenta c, BigDecimal pagado, Usuario asesor, boolean conCliente) {
-        BigDecimal saldo = c.getDeudaTotal().subtract(pagado).max(BigDecimal.ZERO);
-        return new CuentaDto(c.getId(), c.getNumeroOperacion(), c.getEntidad(), c.getProducto(), c.getCartera(),
-                c.getCosecha(), c.getDeudaTotal(), c.getDiasMora(), pagado, saldo,
-                asesor != null ? asesor.getId() : null, asesor != null ? asesor.getNombre() : null,
-                conCliente ? c.getCliente().getId() : null,
-                conCliente ? c.getCliente().getDocumento() : null,
-                conCliente ? c.getCliente().getNombres() : null);
+    private static CuentaDto toDto(Cuenta c, BigDecimal paid, Usuario advisor, boolean includeClient) {
+        BigDecimal balance = c.getDeudaTotal().subtract(paid).max(BigDecimal.ZERO);
+        return new CuentaDto(
+                c.getId(),
+                c.getNumeroOperacion(),
+                c.getEntidad(),
+                c.getProducto(),
+                c.getCartera(),
+                c.getCosecha(),
+                c.getDeudaTotal(),
+                c.getDiasMora(),
+                paid,
+                balance,
+                advisor != null ? advisor.getId() : null,
+                advisor != null ? advisor.getNombre() : null,
+                includeClient ? c.getCliente().getId() : null,
+                includeClient ? c.getCliente().getDocumento() : null,
+                includeClient ? c.getCliente().getNombres() : null
+        );
     }
 }

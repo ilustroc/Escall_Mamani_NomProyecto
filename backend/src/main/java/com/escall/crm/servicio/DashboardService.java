@@ -18,12 +18,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/** Dashboard operativo (RF10 - RF12): gestiones, contactos, promesas y pagos. */
+/**
+ * Operational Dashboard Service (RF10 - RF12): Metrics for collections, contacts, promises, and payments.
+ */
 @Service
 @RequiredArgsConstructor
 public class DashboardService {
 
-    private static final PageRequest SIN_LIMITE_PRACTICO = PageRequest.of(0, 100_000);
+    private static final PageRequest NO_LIMIT = PageRequest.of(0, 100_000);
 
     private final GestionRepository gestiones;
     private final PromesaRepository promesas;
@@ -34,85 +36,120 @@ public class DashboardService {
     private final AlcanceConsulta alcanceConsulta;
 
     @Transactional(readOnly = true)
-    public DashboardDto resumen(Filtros filtros) {
-        AlcanceConsulta.Alcance a = alcanceConsulta.resolver(filtros);
-        var inicio = a.desde().atStartOfDay();
-        var fin = a.hasta().plusDays(1).atStartOfDay();
+    public DashboardDto calculateDashboard(Filtros filters) {
+        AlcanceConsulta.Alcance a = alcanceConsulta.resolver(filters);
+        var start = a.desde().atStartOfDay();
+        var end = a.hasta().plusDays(1).atStartOfDay();
 
-        List<Gestion> listaGestiones = gestiones.delPeriodo(inicio, fin, a.asesores(), a.cartera(), a.cosecha(),
-                SIN_LIMITE_PRACTICO);
-        List<Promesa> listaPromesas = promesas.delPeriodo(inicio, fin, a.asesores(), a.cartera(), a.cosecha(),
-                SIN_LIMITE_PRACTICO);
-        List<Object[]> listaPagos = pagos.delPeriodo(a.desde(), a.hasta(), a.todos(), a.asesores(), a.cartera(),
-                a.cosecha(), SIN_LIMITE_PRACTICO);
+        List<Gestion> managementList = gestiones.delPeriodo(start, end, a.asesores(), a.cartera(), a.cosecha(), NO_LIMIT);
+        List<Promesa> promiseList = promesas.delPeriodo(start, end, a.asesores(), a.cartera(), a.cosecha(), NO_LIMIT);
+        List<Object[]> paymentList = pagos.delPeriodo(a.desde(), a.hasta(), a.todos(), a.asesores(), a.cartera(), a.cosecha(), NO_LIMIT);
 
-        long contactos = listaGestiones.stream().filter(g -> g.getTipificacionN1().isEsContacto()).count();
-        BigDecimal montoPromesas = sumar(listaPromesas.stream().map(Promesa::getMonto));
-        BigDecimal montoPagos = sumar(listaPagos.stream().map(f -> ((Pago) f[0]).getMonto()));
+        long contactCount = managementList.stream().filter(g -> g.getTipificacionN1().isEsContacto()).count();
+        BigDecimal totalPromiseAmount = sum(promiseList.stream().map(Promesa::getMonto));
+        BigDecimal totalPaymentAmount = sum(paymentList.stream().map(f -> ((Pago) f[0]).getMonto()));
 
-        return new DashboardDto(a.desde(), a.hasta(),
-                listaGestiones.size(), contactos, porcentaje(contactos, listaGestiones.size()),
-                listaPromesas.size(), montoPromesas, listaPagos.size(), montoPagos,
-                porAsesor(a.asesores(), listaGestiones, listaPromesas, listaPagos),
-                porDia(a.desde(), a.hasta(), listaGestiones),
-                porTipificacion(listaGestiones));
+        return new DashboardDto(
+                a.desde(),
+                a.hasta(),
+                managementList.size(),
+                contactCount,
+                calculatePercentage(contactCount, managementList.size()),
+                promiseList.size(),
+                totalPromiseAmount,
+                paymentList.size(),
+                totalPaymentAmount,
+                byAdvisor(a.asesores(), managementList, promiseList, paymentList),
+                byDay(a.desde(), a.hasta(), managementList),
+                byTypology(managementList)
+        );
     }
 
-    /** Opciones de los desplegables de filtro según lo que el usuario puede ver. */
     @Transactional(readOnly = true)
-    public OpcionesFiltroDto opciones() {
-        List<Long> visibles = usuarioActual.asesoresVisibles(usuarioActual.obtener());
-        List<OpcionesFiltroDto.Opcion> asesores = usuarios.findAllById(visibles).stream()
+    public DashboardDto resumen(Filtros filtros) {
+        return calculateDashboard(filtros);
+    }
+
+    /**
+     * Filter dropdown options available for the current user's role scope.
+     */
+    @Transactional(readOnly = true)
+    public OpcionesFiltroDto getFilterOptions() {
+        List<Long> visibleAdvisorIds = usuarioActual.asesoresVisibles(usuarioActual.obtener());
+        List<OpcionesFiltroDto.Opcion> advisorOptions = usuarios.findAllById(visibleAdvisorIds).stream()
                 .sorted(Comparator.comparing(Usuario::getNombre))
                 .map(u -> new OpcionesFiltroDto.Opcion(u.getId(), u.getNombre() + (u.isActivo() ? "" : " (inactivo)")))
                 .toList();
-        return new OpcionesFiltroDto(cuentas.carteras(), cuentas.cosechas(), asesores);
+        return new OpcionesFiltroDto(cuentas.carteras(), cuentas.cosechas(), advisorOptions);
     }
 
-    // ---------------------------------------------------------------- cálculos
+    @Transactional(readOnly = true)
+    public OpcionesFiltroDto opciones() {
+        return getFilterOptions();
+    }
 
-    private List<DashboardDto.FilaAsesor> porAsesor(List<Long> ids, List<Gestion> gs, List<Promesa> ps,
-                                                    List<Object[]> pagosConAsesor) {
-        Map<Long, List<Gestion>> gPorAsesor = gs.stream().collect(Collectors.groupingBy(g -> g.getAsesor().getId()));
-        Map<Long, List<Promesa>> pPorAsesor = ps.stream().collect(Collectors.groupingBy(p -> p.getAsesor().getId()));
-        Map<Long, List<Pago>> pagoPorAsesor = pagosConAsesor.stream().filter(f -> f[1] != null)
-                .collect(Collectors.groupingBy(f -> ((Usuario) f[1]).getId(),
-                        Collectors.mapping(f -> (Pago) f[0], Collectors.toList())));
+    // ---------------------------------------------------------------- Calculation helpers
+
+    private List<DashboardDto.FilaAsesor> byAdvisor(
+            List<Long> ids,
+            List<Gestion> gs,
+            List<Promesa> ps,
+            List<Object[]> paymentsWithAdvisor
+    ) {
+        Map<Long, List<Gestion>> gByAdvisor = gs.stream().collect(Collectors.groupingBy(g -> g.getAsesor().getId()));
+        Map<Long, List<Promesa>> pByAdvisor = ps.stream().collect(Collectors.groupingBy(p -> p.getAsesor().getId()));
+        Map<Long, List<Pago>> paymentByAdvisor = paymentsWithAdvisor.stream()
+                .filter(f -> f[1] != null)
+                .collect(Collectors.groupingBy(
+                        f -> ((Usuario) f[1]).getId(),
+                        Collectors.mapping(f -> (Pago) f[0], Collectors.toList())
+                ));
 
         return usuarios.findAllById(ids).stream()
                 .sorted(Comparator.comparing(Usuario::getNombre))
                 .map(u -> {
-                    List<Gestion> g = gPorAsesor.getOrDefault(u.getId(), List.of());
-                    List<Promesa> p = pPorAsesor.getOrDefault(u.getId(), List.of());
-                    List<Pago> pg = pagoPorAsesor.getOrDefault(u.getId(), List.of());
-                    return new DashboardDto.FilaAsesor(u.getId(), u.getNombre(), g.size(),
+                    List<Gestion> g = gByAdvisor.getOrDefault(u.getId(), List.of());
+                    List<Promesa> p = pByAdvisor.getOrDefault(u.getId(), List.of());
+                    List<Pago> pg = paymentByAdvisor.getOrDefault(u.getId(), List.of());
+                    return new DashboardDto.FilaAsesor(
+                            u.getId(),
+                            u.getNombre(),
+                            g.size(),
                             g.stream().filter(x -> x.getTipificacionN1().isEsContacto()).count(),
-                            p.size(), sumar(p.stream().map(Promesa::getMonto)),
-                            pg.size(), sumar(pg.stream().map(Pago::getMonto)));
+                            p.size(),
+                            sum(p.stream().map(Promesa::getMonto)),
+                            pg.size(),
+                            sum(pg.stream().map(Pago::getMonto))
+                    );
                 })
                 .toList();
     }
 
-    private List<DashboardDto.Dia> porDia(LocalDate desde, LocalDate hasta, List<Gestion> gs) {
-        if (ChronoUnit.DAYS.between(desde, hasta) > 62) {
-            return List.of(); // para rangos largos el gráfico diario deja de ser legible
+    private List<DashboardDto.Dia> byDay(LocalDate from, LocalDate to, List<Gestion> gs) {
+        if (ChronoUnit.DAYS.between(from, to) > 62) {
+            return List.of();
         }
-        Map<LocalDate, List<Gestion>> agrupadas = gs.stream()
+        Map<LocalDate, List<Gestion>> grouped = gs.stream()
                 .collect(Collectors.groupingBy(g -> g.getFechaHora().toLocalDate()));
-        List<DashboardDto.Dia> dias = new ArrayList<>();
-        for (LocalDate d = desde; !d.isAfter(hasta); d = d.plusDays(1)) {
-            List<Gestion> delDia = agrupadas.getOrDefault(d, List.of());
-            dias.add(new DashboardDto.Dia(d, delDia.size(),
-                    delDia.stream().filter(g -> g.getTipificacionN1().isEsContacto()).count(),
-                    delDia.stream().filter(g -> g.getPromesa() != null).count()));
+        List<DashboardDto.Dia> days = new ArrayList<>();
+        for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
+            List<Gestion> dayManagements = grouped.getOrDefault(d, List.of());
+            days.add(new DashboardDto.Dia(
+                    d,
+                    dayManagements.size(),
+                    dayManagements.stream().filter(g -> g.getTipificacionN1().isEsContacto()).count(),
+                    dayManagements.stream().filter(g -> g.getPromesa() != null).count()
+            ));
         }
-        return dias;
+        return days;
     }
 
-    private List<DashboardDto.Conteo> porTipificacion(List<Gestion> gs) {
+    private List<DashboardDto.Conteo> byTypology(List<Gestion> gs) {
         return gs.stream()
-                .collect(Collectors.groupingBy(g -> g.getTipificacionN1().getNombre() + " › " + g.getTipificacionN2().getNombre(),
-                        Collectors.counting()))
+                .collect(Collectors.groupingBy(
+                        g -> g.getTipificacionN1().getNombre() + " › " + g.getTipificacionN2().getNombre(),
+                        Collectors.counting()
+                ))
                 .entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
                 .limit(10)
@@ -120,11 +157,11 @@ public class DashboardService {
                 .toList();
     }
 
-    private static BigDecimal sumar(java.util.stream.Stream<BigDecimal> montos) {
-        return montos.reduce(BigDecimal.ZERO, BigDecimal::add);
+    private static BigDecimal sum(java.util.stream.Stream<BigDecimal> amounts) {
+        return amounts.reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private static double porcentaje(long parte, long total) {
-        return total == 0 ? 0 : BigDecimal.valueOf(parte * 100.0 / total).setScale(1, RoundingMode.HALF_UP).doubleValue();
+    private static double calculatePercentage(long part, long total) {
+        return total == 0 ? 0 : BigDecimal.valueOf(part * 100.0 / total).setScale(1, RoundingMode.HALF_UP).doubleValue();
     }
 }

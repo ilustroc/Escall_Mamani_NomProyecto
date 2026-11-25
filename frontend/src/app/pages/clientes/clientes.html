@@ -1,16 +1,134 @@
-<div class="heading-row"><div><p class="eyebrow">GESTIÓN DE CARTERA</p><h1>Clientes y cobranzas</h1><p class="lead">Busca por documento, nombre o número de operación.</p></div>@if(auth.sesion()?.usuario?.rol==='ADMIN'){<button (click)="abrirAlta()">+ Nuevo cliente</button>}</div>
-<form class="panel search-form" [formGroup]="busqueda" (ngSubmit)="buscar()"><div><label for="busqueda">Buscar cliente</label><input id="busqueda" formControlName="q" placeholder="Escribe al menos 3 caracteres" maxlength="100">@if(busqueda.controls.q.touched && busqueda.controls.q.invalid){<small class="error">Escribe al menos 3 caracteres para buscar.</small>}</div><button type="submit" [disabled]="busqueda.invalid||cargando()">{{cargando()?'Buscando…':'Buscar'}}</button></form>
-@if(error()){<p class="error notice" role="alert">{{error()}}</p>}
-<section class="panel"><div class="section-heading"><h2>Resultados de búsqueda</h2><span>{{filas().length}} clientes</span></div>
-@if(!buscado()&&!cargando()){<div class="empty">Consulta un documento, nombre u operación. Verás los clientes disponibles para tu perfil.</div>}
-@if(cargando()){<p role="status">Consultando clientes…</p>}
-@if(buscado()&&!filas().length&&!cargando()){<p class="empty">No hay clientes que coincidan con tu búsqueda.</p>}
-@if(filas().length){<div class="table-scroll"><table><thead><tr><th>Documento</th><th>Cliente</th><th>Cuentas</th><th>Deuda total</th><th>Acción</th></tr></thead><tbody>@for(c of filas();track c.id){<tr><td>{{c.tipoDocumento}} {{c.documento}}</td><td><strong>{{c.nombres}}</strong></td><td>{{c.cuentas}}</td><td>{{c.deudaTotal|currency:'PEN':'S/ '}}</td><td><a class="button secondary" [routerLink]="['/clientes',c.id]">Ver detalle</a></td></tr>}</tbody></table></div><p class="muted">Hasta 30 coincidencias. Afina la búsqueda si necesitas un resultado más específico.</p>}
+<div class="heading-row">
+  <div>
+    <p class="eyebrow">GESTIÓN DE CARTERA</p>
+    <h1>Clientes y cobranzas</h1>
+    <p class="lead">Busca por documento, nombre o número de operación.</p>
+  </div>
+  @if (authService.sesion()?.usuario?.rol === 'ADMIN') {
+    <button (click)="openCreateModal()">+ Nuevo cliente</button>
+  }
+</div>
+
+<form class="panel search-form" [formGroup]="searchForm" (ngSubmit)="search()">
+  <div>
+    <label for="busqueda">Buscar cliente</label>
+    <input id="busqueda" formControlName="q" placeholder="Escribe al menos 3 caracteres" maxlength="100">
+    @if (searchForm.controls.q.touched && searchForm.controls.q.invalid) {
+      <small class="error">Escribe al menos 3 caracteres para buscar.</small>
+    }
+  </div>
+  <button type="submit" [disabled]="searchForm.invalid || isLoading()">
+    {{ isLoading() ? 'Buscando…' : 'Buscar' }}
+  </button>
+</form>
+
+@if (errorMessage()) {
+  <p class="error notice" role="alert">{{ errorMessage() }}</p>
+}
+
+<section class="panel">
+  <div class="section-heading">
+    <h2>Resultados de búsqueda</h2>
+    <span>{{ clients().length }} clientes</span>
+  </div>
+
+  @if (!hasSearched() && !isLoading()) {
+    <div class="empty">Consulta un documento, nombre u operación. Verás los clientes disponibles para tu perfil.</div>
+  }
+
+  @if (isLoading()) {
+    <p role="status">Consultando clientes…</p>
+  }
+
+  @if (hasSearched() && !clients().length && !isLoading()) {
+    <p class="empty">No hay clientes que coincidan con tu búsqueda.</p>
+  }
+
+  @if (clients().length) {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Documento</th>
+            <th>Cliente</th>
+            <th>Cuentas</th>
+            <th>Deuda total</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of clients(); track c.id) {
+            <tr>
+              <td>{{ c.tipoDocumento }} {{ c.documento }}</td>
+              <td><strong>{{ c.nombres }}</strong></td>
+              <td>{{ c.cuentas }}</td>
+              <td>{{ c.deudaTotal | currency:'PEN':'S/ ' }}</td>
+              <td>
+                <a class="button secondary" [routerLink]="['/clientes', c.id]">Ver detalle</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Hasta 30 coincidencias. Afina la búsqueda si necesitas un resultado más específico.</p>
+  }
 </section>
-@if(nuevo()){<div class="modal-backdrop"><section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="alta-titulo"><div class="section-heading"><h2 id="alta-titulo">Nuevo cliente</h2><button class="quiet" (click)="nuevo.set(false)" [disabled]="guardando()">Cerrar</button></div><p class="muted">Las cuentas se incorporan mediante el proceso de asignación. El nuevo cliente se registra sin deuda asociada.</p>
-<form [formGroup]="alta" (ngSubmit)="crear()"><div class="form-grid"><div><label for="tipo">Tipo de documento</label><select id="tipo" formControlName="tipoDocumento"><option>DNI</option><option>CE</option><option>RUC</option></select></div><div><label for="documento">Documento</label><input id="documento" formControlName="documento" maxlength="20">@if(alta.controls.documento.touched&&alta.controls.documento.invalid){<small class="error">Ingresa un documento de hasta 20 caracteres.</small>}</div></div>
-<label for="nombres">Nombres y apellidos</label><input id="nombres" formControlName="nombres" maxlength="150">@if(alta.controls.nombres.touched&&alta.controls.nombres.invalid){<small class="error">Ingresa el nombre del cliente.</small>}
-<label for="email">Correo electrónico (opcional)</label><input id="email" type="email" formControlName="email" maxlength="150">@if(alta.controls.email.touched&&alta.controls.email.invalid){<small class="error">Ingresa un correo válido.</small>}
-<label for="direccion">Dirección (opcional)</label><input id="direccion" formControlName="direccion" maxlength="300">
-@if(errorAlta()){<p class="error" role="alert">{{errorAlta()}}</p>}
-<div class="actions"><button type="button" class="secondary" (click)="nuevo.set(false)" [disabled]="guardando()">Cancelar</button><button type="submit" [disabled]="alta.invalid||guardando()">{{guardando()?'Guardando…':'Registrar cliente'}}</button></div></form></section></div>}
+
+@if (isCreateModalOpen()) {
+  <div class="modal-backdrop">
+    <section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="alta-titulo">
+      <div class="section-heading">
+        <h2 id="alta-titulo">Nuevo cliente</h2>
+        <button class="quiet" (click)="isCreateModalOpen.set(false)" [disabled]="isSaving()">Cerrar</button>
+      </div>
+      <p class="muted">Las cuentas se incorporan mediante el proceso de asignación. El nuevo cliente se registra sin deuda asociada.</p>
+
+      <form [formGroup]="createForm" (ngSubmit)="createClient()">
+        <div class="form-grid">
+          <div>
+            <label for="tipo">Tipo de documento</label>
+            <select id="tipo" formControlName="tipoDocumento">
+              <option>DNI</option>
+              <option>CE</option>
+              <option>RUC</option>
+            </select>
+          </div>
+          <div>
+            <label for="documento">Documento</label>
+            <input id="documento" formControlName="documento" maxlength="20">
+            @if (createForm.controls.documento.touched && createForm.controls.documento.invalid) {
+              <small class="error">Ingresa un documento de hasta 20 caracteres.</small>
+            }
+          </div>
+        </div>
+
+        <label for="nombres">Nombres y apellidos</label>
+        <input id="nombres" formControlName="nombres" maxlength="150">
+        @if (createForm.controls.nombres.touched && createForm.controls.nombres.invalid) {
+          <small class="error">Ingresa el nombre del cliente.</small>
+        }
+
+        <label for="email">Correo electrónico (opcional)</label>
+        <input id="email" type="email" formControlName="email" maxlength="150">
+        @if (createForm.controls.email.touched && createForm.controls.email.invalid) {
+          <small class="error">Ingresa un correo válido.</small>
+        }
+
+        <label for="direccion">Dirección (opcional)</label>
+        <input id="direccion" formControlName="direccion" maxlength="300">
+
+        @if (createErrorMessage()) {
+          <p class="error" role="alert">{{ createErrorMessage() }}</p>
+        }
+
+        <div class="actions">
+          <button type="button" class="secondary" (click)="isCreateModalOpen.set(false)" [disabled]="isSaving()">Cancelar</button>
+          <button type="submit" [disabled]="createForm.invalid || isSaving()">
+            {{ isSaving() ? 'Guardando…' : 'Registrar cliente' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

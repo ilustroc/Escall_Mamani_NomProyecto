@@ -6,8 +6,8 @@ import com.escall.crm.excepcion.ReglaNegocioException;
 import com.escall.crm.modelo.*;
 import com.escall.crm.repositorio.*;
 import com.escall.crm.seguridad.UsuarioActual;
-import com.escall.crm.util.LectorCsv;
-import com.escall.crm.util.LectorCsv.Fila;
+import com.escall.crm.util.CsvReader;
+import com.escall.crm.util.CsvReader.CsvRow;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,22 +21,25 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
- * Integración de Datos (RF18 - RF21): carga de asignaciones y de pagos desde archivos CSV.
- * Cada fila se valida por separado: las válidas se guardan y las inválidas se reportan
- * con su número de fila y el motivo, sin detener la carga completa.
+ * Data Integration Service (RF18 - RF21): Batch loading of portfolio assignments and payments via CSV files.
+ * Validates each row individually: valid rows are persisted and invalid rows are reported with line number and cause.
  */
 @Service
 @RequiredArgsConstructor
 public class IntegracionService {
 
-    public static final Set<String> COLUMNAS_ASIGNACION = Set.of("documento", "nombres", "numero_operacion",
-            "entidad", "producto", "cartera", "cosecha", "deuda", "dias_mora", "asesor");
+    public static final Set<String> COLUMNAS_ASIGNACION = Set.of(
+            "documento", "nombres", "numero_operacion", "entidad", "producto",
+            "cartera", "cosecha", "deuda", "dias_mora", "asesor"
+    );
     public static final Set<String> COLUMNAS_PAGO = Set.of("numero_operacion", "fecha_pago", "monto");
 
     private static final int MAX_ERRORES_GUARDADOS = 500;
-    private static final List<DateTimeFormatter> FORMATOS_FECHA = List.of(
-            DateTimeFormatter.ISO_LOCAL_DATE, DateTimeFormatter.ofPattern("dd/MM/yyyy"),
-            DateTimeFormatter.ofPattern("d/M/yyyy"));
+    private static final List<DateTimeFormatter> DATE_FORMATTERS = List.of(
+            DateTimeFormatter.ISO_LOCAL_DATE,
+            DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+            DateTimeFormatter.ofPattern("d/M/yyyy")
+    );
 
     private final ClienteRepository clientes;
     private final CuentaRepository cuentas;
@@ -49,222 +52,249 @@ public class IntegracionService {
     private final AuditoriaService auditoria;
     private final Reloj reloj;
 
-    // =================================================================== ASIGNACIONES
+    // =================================================================== ASSIGNMENTS
+
+    @Transactional
+    public CargaDto importAssignments(MultipartFile file) {
+        List<CsvRow> rows = readCsvFile(file, COLUMNAS_ASIGNACION);
+        Carga batch = initBatch(Carga.Tipo.ASIGNACION, file, rows.size());
+        LocalDate today = reloj.today();
+
+        Map<String, Usuario> advisorsByUsername = new HashMap<>();
+        Set<String> operationsInFile = new HashSet<>();
+        List<String> errors = new ArrayList<>();
+        int acceptedCount = 0;
+
+        for (CsvRow row : rows) {
+            try {
+                String missing = COLUMNAS_ASIGNACION.stream()
+                        .filter(col -> row.get(col) == null)
+                        .sorted()
+                        .findFirst()
+                        .orElse(null);
+                if (missing != null) {
+                    throw new ReglaNegocioException("falta el campo \"" + missing + "\"");
+                }
+
+                String operation = row.get("numero_operacion");
+                if (!operationsInFile.add(operation)) {
+                    throw new ReglaNegocioException("la operación " + operation + " está repetida en el archivo");
+                }
+
+                String document = row.get("documento");
+                if (!document.matches("[A-Za-z0-9-]{6,20}")) {
+                    throw new ReglaNegocioException("documento inválido \"" + document + "\"");
+                }
+
+                BigDecimal debt = parseDecimal(row.get("deuda"), "deuda");
+                if (debt.signum() < 0) {
+                    throw new ReglaNegocioException("la deuda no puede ser negativa");
+                }
+
+                int delinquencyDays = parseInteger(row.get("dias_mora"), "dias_mora");
+                String advisorUsername = row.get("asesor").toLowerCase(Locale.ROOT);
+                Usuario advisor = advisorsByUsername.computeIfAbsent(advisorUsername,
+                        key -> usuarios.findByUsuarioIgnoreCase(key)
+                                .filter(u -> u.getRol() == Rol.ASESOR && u.isActivo())
+                                .orElse(null));
+                if (advisor == null) {
+                    throw new ReglaNegocioException("el asesor \"" + advisorUsername + "\" no existe o no está activo");
+                }
+
+                Cuenta account = cuentas.findByNumeroOperacion(operation).orElseGet(Cuenta::new);
+                if (account.getId() != null && !account.getCliente().getDocumento().equals(document)) {
+                    throw new ReglaNegocioException("la operación " + operation + " ya pertenece a otro cliente");
+                }
+
+                Cliente client = clientes.findByDocumento(document).orElseGet(Cliente::new);
+                client.setDocumento(document);
+                client.setTipoDocumento(Optional.ofNullable(row.get("tipo_documento")).orElse("DNI").toUpperCase(Locale.ROOT));
+                client.setNombres(row.get("nombres"));
+                if (row.get("email") != null) client.setEmail(row.get("email"));
+                if (row.get("direccion") != null) client.setDireccion(row.get("direccion"));
+                client.agregarTelefono(row.get("telefono"), "CELULAR");
+                client = clientes.save(client);
+
+                account.setCliente(client);
+                account.setNumeroOperacion(operation);
+                account.setEntidad(row.get("entidad"));
+                account.setProducto(row.get("producto"));
+                account.setCartera(row.get("cartera"));
+                account.setCosecha(row.get("cosecha"));
+                account.setDeudaTotal(debt);
+                account.setDiasMora(delinquencyDays);
+                account = cuentas.save(account);
+
+                Optional<Asignacion> currentAssignment = asignaciones.findByCuentaIdAndActivaTrue(account.getId());
+                if (currentAssignment.isEmpty() || !currentAssignment.get().getAsesor().getId().equals(advisor.getId())) {
+                    currentAssignment.ifPresent(a -> {
+                        a.setActiva(false);
+                        a.setFechaFin(today);
+                    });
+                    Asignacion newAssignment = new Asignacion();
+                    newAssignment.setCuenta(account);
+                    newAssignment.setAsesor(advisor);
+                    newAssignment.setFechaAsignacion(today);
+                    newAssignment.setCarga(batch);
+                    asignaciones.save(newAssignment);
+                }
+                acceptedCount++;
+            } catch (ReglaNegocioException e) {
+                errors.add("Fila " + row.rowNumber() + ": " + e.getMessage());
+            }
+        }
+        return closeBatch(batch, acceptedCount, errors);
+    }
 
     @Transactional
     public CargaDto cargarAsignaciones(MultipartFile archivo) {
-        List<Fila> filas = leer(archivo, COLUMNAS_ASIGNACION);
-        Carga carga = iniciarCarga(Carga.Tipo.ASIGNACION, archivo, filas.size());
-        LocalDate hoy = reloj.hoy();
-
-        Map<String, Usuario> asesoresPorUsuario = new HashMap<>();
-        Set<String> operacionesEnArchivo = new HashSet<>();
-        List<String> errores = new ArrayList<>();
-        int aceptados = 0;
-
-        for (Fila f : filas) {
-            try {
-                String faltante = COLUMNAS_ASIGNACION.stream().filter(c -> f.get(c) == null).sorted().findFirst().orElse(null);
-                if (faltante != null) {
-                    throw new ReglaNegocioException("falta el campo \"" + faltante + "\"");
-                }
-                String operacion = f.get("numero_operacion");
-                if (!operacionesEnArchivo.add(operacion)) {
-                    throw new ReglaNegocioException("la operación " + operacion + " está repetida en el archivo");
-                }
-                String documento = f.get("documento");
-                if (!documento.matches("[A-Za-z0-9-]{6,20}")) {
-                    throw new ReglaNegocioException("documento inválido \"" + documento + "\"");
-                }
-                BigDecimal deuda = decimal(f.get("deuda"), "deuda");
-                if (deuda.signum() < 0) {
-                    throw new ReglaNegocioException("la deuda no puede ser negativa");
-                }
-                int diasMora = entero(f.get("dias_mora"), "dias_mora");
-                String usuarioAsesor = f.get("asesor").toLowerCase(Locale.ROOT);
-                Usuario asesor = asesoresPorUsuario.computeIfAbsent(usuarioAsesor,
-                        clave -> usuarios.findByUsuarioIgnoreCase(clave)
-                                .filter(u -> u.getRol() == Rol.ASESOR && u.isActivo()).orElse(null));
-                if (asesor == null) {
-                    throw new ReglaNegocioException("el asesor \"" + usuarioAsesor + "\" no existe o no está activo");
-                }
-
-                // Antes de guardar nada: la operación no puede pertenecer a otro cliente
-                Cuenta cuenta = cuentas.findByNumeroOperacion(operacion).orElseGet(Cuenta::new);
-                if (cuenta.getId() != null && !cuenta.getCliente().getDocumento().equals(documento)) {
-                    throw new ReglaNegocioException("la operación " + operacion + " ya pertenece a otro cliente");
-                }
-
-                // Cliente: se crea o se actualiza por documento
-                Cliente cliente = clientes.findByDocumento(documento).orElseGet(Cliente::new);
-                cliente.setDocumento(documento);
-                cliente.setTipoDocumento(Optional.ofNullable(f.get("tipo_documento")).orElse("DNI").toUpperCase(Locale.ROOT));
-                cliente.setNombres(f.get("nombres"));
-                if (f.get("email") != null) cliente.setEmail(f.get("email"));
-                if (f.get("direccion") != null) cliente.setDireccion(f.get("direccion"));
-                cliente.agregarTelefono(f.get("telefono"), "CELULAR");
-                cliente = clientes.save(cliente);
-
-                // Cuenta: se crea o se actualiza por número de operación
-                cuenta.setCliente(cliente);
-                cuenta.setNumeroOperacion(operacion);
-                cuenta.setEntidad(f.get("entidad"));
-                cuenta.setProducto(f.get("producto"));
-                cuenta.setCartera(f.get("cartera"));
-                cuenta.setCosecha(f.get("cosecha"));
-                cuenta.setDeudaTotal(deuda);
-                cuenta.setDiasMora(diasMora);
-                cuenta = cuentas.save(cuenta);
-
-                // Asignación: si cambia de asesor, la anterior se cierra y queda como historial
-                Optional<Asignacion> actual = asignaciones.findByCuentaIdAndActivaTrue(cuenta.getId());
-                if (actual.isEmpty() || !actual.get().getAsesor().getId().equals(asesor.getId())) {
-                    actual.ifPresent(a -> {
-                        a.setActiva(false);
-                        a.setFechaFin(hoy);
-                    });
-                    Asignacion nueva = new Asignacion();
-                    nueva.setCuenta(cuenta);
-                    nueva.setAsesor(asesor);
-                    nueva.setFechaAsignacion(hoy);
-                    nueva.setCarga(carga);
-                    asignaciones.save(nueva);
-                }
-                aceptados++;
-            } catch (ReglaNegocioException e) {
-                errores.add("Fila " + f.numero() + ": " + e.getMessage());
-            }
-        }
-        return cerrarCarga(carga, aceptados, errores);
+        return importAssignments(archivo);
     }
 
-    // =================================================================== PAGOS
+    // =================================================================== PAYMENTS
 
     @Transactional
-    public CargaDto cargarPagos(MultipartFile archivo) {
-        List<Fila> filas = leer(archivo, COLUMNAS_PAGO);
-        Carga carga = iniciarCarga(Carga.Tipo.PAGO, archivo, filas.size());
-        LocalDate hoy = reloj.hoy();
+    public CargaDto importPayments(MultipartFile file) {
+        List<CsvRow> rows = readCsvFile(file, COLUMNAS_PAGO);
+        Carga batch = initBatch(Carga.Tipo.PAGO, file, rows.size());
+        LocalDate today = reloj.today();
 
-        Set<String> clavesEnArchivo = new HashSet<>();
-        List<String> errores = new ArrayList<>();
-        int aceptados = 0;
+        Set<String> keysInFile = new HashSet<>();
+        List<String> errors = new ArrayList<>();
+        int acceptedCount = 0;
 
-        for (Fila f : filas) {
+        for (CsvRow row : rows) {
             try {
-                String faltante = COLUMNAS_PAGO.stream().filter(c -> f.get(c) == null).sorted().findFirst().orElse(null);
-                if (faltante != null) {
-                    throw new ReglaNegocioException("falta el campo \"" + faltante + "\"");
+                String missing = COLUMNAS_PAGO.stream()
+                        .filter(col -> row.get(col) == null)
+                        .sorted()
+                        .findFirst()
+                        .orElse(null);
+                if (missing != null) {
+                    throw new ReglaNegocioException("falta el campo \"" + missing + "\"");
                 }
-                String operacion = f.get("numero_operacion");
-                Cuenta cuenta = cuentas.findByNumeroOperacion(operacion)
-                        .orElseThrow(() -> new ReglaNegocioException("la operación " + operacion + " no existe"));
-                LocalDate fecha = fecha(f.get("fecha_pago"));
-                if (fecha.isAfter(hoy)) {
+
+                String operation = row.get("numero_operacion");
+                Cuenta account = cuentas.findByNumeroOperacion(operation)
+                        .orElseThrow(() -> new ReglaNegocioException("la operación " + operation + " no existe"));
+
+                LocalDate paymentDate = parseDate(row.get("fecha_pago"));
+                if (paymentDate.isAfter(today)) {
                     throw new ReglaNegocioException("la fecha de pago no puede ser futura");
                 }
-                BigDecimal monto = decimal(f.get("monto"), "monto");
-                if (monto.signum() <= 0) {
+
+                BigDecimal amount = parseDecimal(row.get("monto"), "monto");
+                if (amount.signum() <= 0) {
                     throw new ReglaNegocioException("el monto debe ser mayor a 0");
                 }
-                String referencia = Optional.ofNullable(f.get("referencia")).orElse("");
+                String reference = Optional.ofNullable(row.get("referencia")).orElse("");
 
-                String clave = cuenta.getId() + "|" + fecha + "|" + monto.stripTrailingZeros().toPlainString() + "|" + referencia;
-                if (!clavesEnArchivo.add(clave)
-                        || pagos.existsByCuentaIdAndFechaPagoAndMontoAndReferencia(cuenta.getId(), fecha, monto, referencia)) {
+                String uniqueKey = account.getId() + "|" + paymentDate + "|" + amount.stripTrailingZeros().toPlainString() + "|" + reference;
+                if (!keysInFile.add(uniqueKey)
+                        || pagos.existsByCuentaIdAndFechaPagoAndMontoAndReferencia(account.getId(), paymentDate, amount, reference)) {
                     throw new ReglaNegocioException("pago duplicado (misma operación, fecha, monto y referencia)");
                 }
 
-                Pago p = new Pago();
-                p.setCuenta(cuenta);
-                p.setFechaPago(fecha);
-                p.setMonto(monto);
-                p.setReferencia(referencia);
-                p.setCarga(carga);
-                pagos.save(p);
+                Pago payment = new Pago();
+                payment.setCuenta(account);
+                payment.setFechaPago(paymentDate);
+                payment.setMonto(amount);
+                payment.setReferencia(reference);
+                payment.setCarga(batch);
+                pagos.save(payment);
 
-                // Un pago cumple las promesas pendientes que se hicieron antes de esa fecha
-                promesas.marcarCumplidas(cuenta.getId(), fecha.plusDays(1).atStartOfDay());
-                aceptados++;
+                promesas.marcarCumplidas(account.getId(), paymentDate.plusDays(1).atStartOfDay());
+                acceptedCount++;
             } catch (ReglaNegocioException e) {
-                errores.add("Fila " + f.numero() + ": " + e.getMessage());
+                errors.add("Fila " + row.rowNumber() + ": " + e.getMessage());
             }
         }
-        return cerrarCarga(carga, aceptados, errores);
+        return closeBatch(batch, acceptedCount, errors);
+    }
+
+    @Transactional
+    public CargaDto cargarPagos(MultipartFile archivo) {
+        return importPayments(archivo);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CargaDto> getHistory() {
+        return cargas.findTop20ByOrderByCreadoEnDesc().stream().map(CargaDto::desde).toList();
     }
 
     @Transactional(readOnly = true)
     public List<CargaDto> historial() {
-        return cargas.findTop20ByOrderByCreadoEnDesc().stream().map(CargaDto::desde).toList();
+        return getHistory();
     }
 
-    // =================================================================== auxiliares
+    // =================================================================== HELPER METHODS
 
-    private List<Fila> leer(MultipartFile archivo, Set<String> columnas) {
-        if (archivo == null || archivo.isEmpty()) {
+    private List<CsvRow> readCsvFile(MultipartFile file, Set<String> mandatoryColumns) {
+        if (file == null || file.isEmpty()) {
             throw new ReglaNegocioException("Selecciona un archivo");
         }
-        String nombre = Optional.ofNullable(archivo.getOriginalFilename()).orElse("").toLowerCase(Locale.ROOT);
-        if (!nombre.endsWith(".csv") && !nombre.endsWith(".txt")) {
+        String filename = Optional.ofNullable(file.getOriginalFilename()).orElse("").toLowerCase(Locale.ROOT);
+        if (!filename.endsWith(".csv") && !filename.endsWith(".txt")) {
             throw new ReglaNegocioException("Formato no soportado: usa un archivo .csv (en Excel: Guardar como > CSV UTF-8)");
         }
         try {
-            return LectorCsv.leer(archivo.getInputStream(), columnas);
+            return CsvReader.readCsv(file.getInputStream(), mandatoryColumns);
         } catch (IOException e) {
             throw new ReglaNegocioException("No se pudo leer el archivo");
         }
     }
 
-    private Carga iniciarCarga(Carga.Tipo tipo, MultipartFile archivo, int total) {
-        Carga c = new Carga();
-        c.setTipo(tipo);
-        String nombre = Optional.ofNullable(archivo.getOriginalFilename()).orElse("archivo.csv");
-        c.setNombreArchivo(nombre.length() > 200 ? nombre.substring(0, 200) : nombre);
-        c.setUsuario(usuarioActual.obtener());
-        c.setTotal(total);
-        return cargas.save(c);
+    private Carga initBatch(Carga.Tipo type, MultipartFile file, int total) {
+        Carga batch = new Carga();
+        batch.setTipo(type);
+        String name = Optional.ofNullable(file.getOriginalFilename()).orElse("archivo.csv");
+        batch.setNombreArchivo(name.length() > 200 ? name.substring(0, 200) : name);
+        batch.setUsuario(usuarioActual.obtener());
+        batch.setTotal(total);
+        return cargas.save(batch);
     }
 
-    private CargaDto cerrarCarga(Carga c, int aceptados, List<String> errores) {
-        c.setAceptados(aceptados);
-        c.setRechazados(errores.size());
-        List<String> guardados = errores.size() > MAX_ERRORES_GUARDADOS
-                ? new ArrayList<>(errores.subList(0, MAX_ERRORES_GUARDADOS)) : errores;
-        if (errores.size() > MAX_ERRORES_GUARDADOS) {
-            guardados.add("... y " + (errores.size() - MAX_ERRORES_GUARDADOS) + " errores más");
+    private CargaDto closeBatch(Carga batch, int acceptedCount, List<String> errors) {
+        batch.setAceptados(acceptedCount);
+        batch.setRechazados(errors.size());
+        List<String> savedErrors = errors.size() > MAX_ERRORES_GUARDADOS
+                ? new ArrayList<>(errors.subList(0, MAX_ERRORES_GUARDADOS))
+                : errors;
+        if (errors.size() > MAX_ERRORES_GUARDADOS) {
+            savedErrors.add("... y " + (errors.size() - MAX_ERRORES_GUARDADOS) + " errores más");
         }
-        c.setDetalleErrores(String.join("\n", guardados));
-        auditoria.registrar(c.getUsuario().getUsuario(), "CARGA_" + c.getTipo(), "Carga", c.getId(),
-                c.getNombreArchivo() + ": " + aceptados + " aceptados, " + errores.size() + " rechazados");
-        return CargaDto.desde(c);
+        batch.setDetalleErrores(String.join("\n", savedErrors));
+        auditoria.registrar(batch.getUsuario().getUsuario(), "CARGA_" + batch.getTipo(), "Carga", batch.getId(),
+                batch.getNombreArchivo() + ": " + acceptedCount + " aceptados, " + errors.size() + " rechazados");
+        return CargaDto.desde(batch);
     }
 
-    private static BigDecimal decimal(String valor, String campo) {
+    private static BigDecimal parseDecimal(String value, String fieldName) {
         try {
-            return new BigDecimal(valor.replace(" ", "").replace(",", "."));
+            return new BigDecimal(value.replace(" ", "").replace(",", "."));
         } catch (NumberFormatException e) {
-            throw new ReglaNegocioException("\"" + campo + "\" debe ser un número (ej: 1250.50)");
+            throw new ReglaNegocioException("\"" + fieldName + "\" debe ser un número (ej: 1250.50)");
         }
     }
 
-    private static int entero(String valor, String campo) {
+    private static int parseInteger(String value, String fieldName) {
         try {
-            int n = Integer.parseInt(valor.trim());
+            int n = Integer.parseInt(value.trim());
             if (n < 0) throw new NumberFormatException();
             return n;
         } catch (NumberFormatException e) {
-            throw new ReglaNegocioException("\"" + campo + "\" debe ser un número entero positivo");
+            throw new ReglaNegocioException("\"" + fieldName + "\" debe ser un número entero positivo");
         }
     }
 
-    private static LocalDate fecha(String valor) {
-        for (DateTimeFormatter formato : FORMATOS_FECHA) {
+    private static LocalDate parseDate(String value) {
+        for (DateTimeFormatter formatter : DATE_FORMATTERS) {
             try {
-                return LocalDate.parse(valor.trim(), formato);
-            } catch (DateTimeParseException ignorada) {
-                // probamos el siguiente formato
+                return LocalDate.parse(value.trim(), formatter);
+            } catch (DateTimeParseException ignored) {
+                // Try next pattern
             }
         }
-        throw new ReglaNegocioException("fecha inválida \"" + valor + "\" (usa AAAA-MM-DD o DD/MM/AAAA)");
+        throw new ReglaNegocioException("fecha inválida \"" + value + "\" (usa AAAA-MM-DD o DD/MM/AAAA)");
     }
 }

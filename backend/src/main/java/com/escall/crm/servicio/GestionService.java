@@ -18,12 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/** Registro de gestiones (RF07 - RF09). */
+/**
+ * Management and Customer Follow-up Service (RF07 - RF09).
+ */
 @Service
 @RequiredArgsConstructor
 public class GestionService {
 
-    /** Plazo máximo para una promesa de pago, en días. */
+    /** Maximum term for a payment promise, in days. */
     static final int DIAS_MAXIMOS_COMPROMISO = 30;
 
     private final GestionRepository gestiones;
@@ -33,66 +35,74 @@ public class GestionService {
     private final UsuarioActual usuarioActual;
     private final Reloj reloj;
 
+    /**
+     * Record a debt management contact and optional payment promise.
+     */
     @Transactional
-    public GestionDto registrar(GestionRequest req) {
-        Usuario asesor = usuarioActual.obtener();
-        Cuenta cuenta = cuentas.findById(req.cuentaId())
+    public GestionDto recordManagement(GestionRequest req) {
+        Usuario advisor = usuarioActual.obtener();
+        Cuenta account = cuentas.findById(req.cuentaId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cuenta no encontrada"));
 
-        // Solo se gestionan cuentas de la propia cartera
-        Asignacion asignacion = asignaciones.findByCuentaIdAndActivaTrue(cuenta.getId())
-                .filter(a -> a.getAsesor().getId().equals(asesor.getId()))
+        // Only accounts assigned to the current advisor can be managed
+        Asignacion assignment = asignaciones.findByCuentaIdAndActivaTrue(account.getId())
+                .filter(a -> a.getAsesor().getId().equals(advisor.getId()))
                 .orElseThrow(() -> new ReglaNegocioException("Esta cuenta no está asignada a tu cartera"));
 
-        // RF09: el nivel 2 elegido define automáticamente su nivel 1
+        // RF09: Level 2 typology automatically defines its parent Level 1
         TipificacionN2 n2 = tipificaciones.findWithN1ById(req.tipificacionN2Id())
                 .filter(t -> t.isActivo() && t.getN1().isActivo())
                 .orElseThrow(() -> new ReglaNegocioException("La tipificación elegida no existe o está inactiva"));
 
-        LocalDateTime ahora = reloj.ahora();
-        LocalDateTime fechaHora = req.fechaHora() != null ? req.fechaHora() : ahora;
-        if (fechaHora.isAfter(ahora.plusMinutes(5))) {
+        LocalDateTime now = reloj.now();
+        LocalDateTime actionDateTime = req.fechaHora() != null ? req.fechaHora() : now;
+        if (actionDateTime.isAfter(now.plusMinutes(5))) {
             throw new ReglaNegocioException("La fecha de la gestión no puede ser futura");
         }
 
         Gestion g = new Gestion();
-        g.setCuenta(asignacion.getCuenta());
-        g.setAsesor(asesor);
-        g.setFechaHora(fechaHora);
+        g.setCuenta(assignment.getCuenta());
+        g.setAsesor(advisor);
+        g.setFechaHora(actionDateTime);
         g.setTelefono(req.telefono().trim());
         g.setTipificacionN1(n2.getN1());
         g.setTipificacionN2(n2);
         g.setObservacion(req.observacion().trim());
 
-        // RF08: si la tipificación lo exige, se registra la promesa de pago
+        // RF08: If typology requires commitment, create payment promise
         if (n2.isRequiereCompromiso()) {
-            g.setPromesa(crearPromesa(req, g, cuenta, asesor));
+            g.setPromesa(createPromise(req, g, account, advisor));
         }
 
-        // Si el teléfono usado es nuevo, se guarda en la ficha del cliente
-        cuenta.getCliente().agregarTelefono(g.getTelefono(), "GESTION");
+        // If phone number used is new, register it in the client contact record
+        account.getCliente().agregarTelefono(g.getTelefono(), "GESTION");
 
         return GestionDto.desde(gestiones.save(g), false);
     }
 
-    private Promesa crearPromesa(GestionRequest req, Gestion g, Cuenta cuenta, Usuario asesor) {
+    @Transactional
+    public GestionDto registrar(GestionRequest req) {
+        return recordManagement(req);
+    }
+
+    private Promesa createPromise(GestionRequest req, Gestion g, Cuenta account, Usuario advisor) {
         if (req.fechaCompromiso() == null || req.montoCompromiso() == null) {
             throw new ReglaNegocioException("Esta tipificación requiere fecha y monto de compromiso");
         }
-        LocalDate hoy = reloj.hoy();
-        if (req.fechaCompromiso().isBefore(hoy)) {
+        LocalDate today = reloj.today();
+        if (req.fechaCompromiso().isBefore(today)) {
             throw new ReglaNegocioException("La fecha de compromiso no puede ser anterior a hoy");
         }
-        if (req.fechaCompromiso().isAfter(hoy.plusDays(DIAS_MAXIMOS_COMPROMISO))) {
+        if (req.fechaCompromiso().isAfter(today.plusDays(DIAS_MAXIMOS_COMPROMISO))) {
             throw new ReglaNegocioException("La fecha de compromiso no puede superar " + DIAS_MAXIMOS_COMPROMISO + " días");
         }
-        if (req.montoCompromiso().compareTo(cuenta.getDeudaTotal()) > 0) {
+        if (req.montoCompromiso().compareTo(account.getDeudaTotal()) > 0) {
             throw new ReglaNegocioException("El monto comprometido no puede superar la deuda de la cuenta");
         }
         Promesa p = new Promesa();
         p.setGestion(g);
-        p.setCuenta(cuenta);
-        p.setAsesor(asesor);
+        p.setCuenta(account);
+        p.setAsesor(advisor);
         p.setFechaCompromiso(req.fechaCompromiso());
         p.setMonto(req.montoCompromiso());
         return p;

@@ -1,14 +1,192 @@
-<div class="heading-row"><div><p class="eyebrow">EQUIPO Y ACCESOS</p><h1>Administración de usuarios</h1><p class="lead">{{esAdmin()?'Gestiona los usuarios y sus equipos de trabajo.':'Gestiona únicamente a los asesores de tu equipo.'}}</p></div><button (click)="abrir()" [disabled]="cargando()">+ Nuevo usuario</button></div>
-@if(error()){<p class="error notice" role="alert">{{error()}}</p>}@if(exito()){<p class="success notice" role="status">{{exito()}}</p>}
-<section class="panel"><div class="section-heading"><h2>Usuarios</h2><button class="secondary" (click)="cargar()" [disabled]="cargando()">Actualizar lista</button></div><label for="usuarios-buscar">Filtrar usuarios</label><input id="usuarios-buscar" placeholder="Nombre, usuario, correo o rol" [value]="busqueda()" (input)="busqueda.set($any($event.target).value)">
-@if(cargando()){<p role="status">Consultando usuarios…</p>}@else{<div class="table-scroll"><table><thead><tr><th>Usuario</th><th>Nombre / correo</th><th>Rol / equipo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>@for(u of filtrados();track u.id){<tr><td><strong>{{u.usuario}}</strong></td><td>{{u.nombre}}<br><small>{{u.email}}</small></td><td>{{u.rol}}<br><small>{{u.supervisorNombre||'Sin supervisor'}}</small></td><td><span class="state" [class.inactive]="!u.activo">{{u.activo?'Activo':'Inactivo'}}</span></td><td><div class="row-actions"><button class="secondary" (click)="abrir(u)" [attr.aria-label]="'Editar '+u.usuario">Editar</button><button class="secondary" (click)="abrirClave(u)" [attr.aria-label]="'Restablecer contraseña de '+u.usuario">Contraseña</button><button class="secondary" (click)="abrirEstado(u)" [disabled]="u.id===auth.sesion()?.usuario?.id" [attr.aria-label]="(u.activo?'Desactivar ':'Activar ')+u.usuario">{{u.activo?'Desactivar':'Activar'}}</button></div></td></tr>}@empty{<tr><td colspan="5" class="empty">No hay usuarios que coincidan con el filtro.</td></tr>}</tbody></table></div><p class="muted">{{filtrados().length}} usuarios. La desactivación conserva el historial de trabajo.</p>}
+<div class="heading-row">
+  <div>
+    <p class="eyebrow">EQUIPO Y ACCESOS</p>
+    <h1>Administración de usuarios</h1>
+    <p class="lead">{{ isAdmin() ? 'Gestiona los usuarios y sus equipos de trabajo.' : 'Gestiona únicamente a los asesores de tu equipo.' }}</p>
+  </div>
+  <button (click)="openUserModal()" [disabled]="isLoading()">+ Nuevo usuario</button>
+</div>
+
+@if (errorMessage()) {
+  <p class="error notice" role="alert">{{ errorMessage() }}</p>
+}
+@if (successMessage()) {
+  <p class="success notice" role="status">{{ successMessage() }}</p>
+}
+
+<section class="panel">
+  <div class="section-heading">
+    <h2>Usuarios</h2>
+    <button class="secondary" (click)="loadUsers()" [disabled]="isLoading()">Actualizar lista</button>
+  </div>
+
+  <label for="usuarios-buscar">Filtrar usuarios</label>
+  <input id="usuarios-buscar" placeholder="Nombre, usuario, correo o rol" [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)">
+
+  @if (isLoading()) {
+    <p role="status">Consultando usuarios…</p>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Nombre / correo</th>
+            <th>Rol / equipo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of filteredUsers(); track u.id) {
+            <tr>
+              <td><strong>{{ u.usuario }}</strong></td>
+              <td>{{ u.nombre }}<br><small>{{ u.email }}</small></td>
+              <td>{{ u.rol }}<br><small>{{ u.supervisorNombre || 'Sin supervisor' }}</small></td>
+              <td>
+                <span class="state" [class.inactive]="!u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="secondary" (click)="openUserModal(u)" [attr.aria-label]="'Editar ' + u.usuario">
+                    Editar
+                  </button>
+                  <button class="secondary" (click)="openPasswordModal(u)" [attr.aria-label]="'Restablecer contraseña de ' + u.usuario">
+                    Contraseña
+                  </button>
+                  <button class="secondary" (click)="openStatusModal(u)" [disabled]="u.id === authService.sesion()?.usuario?.id" [attr.aria-label]="(u.activo ? 'Desactivar ' : 'Activar ') + u.usuario">
+                    {{ u.activo ? 'Desactivar' : 'Activar' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="empty">No hay usuarios que coincidan con el filtro.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">{{ filteredUsers().length }} usuarios. La desactivación conserva el historial de trabajo.</p>
+  }
 </section>
-@if(formVisible()){<div class="modal-backdrop"><section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="usuario-titulo"><h2 id="usuario-titulo">{{editando()?'Editar usuario':'Nuevo usuario'}}</h2><form [formGroup]="form" (ngSubmit)="guardar()"><label for="usuario-cuenta">Usuario</label><input id="usuario-cuenta" formControlName="usuario" autocomplete="off" maxlength="40" [readonly]="!!editando()&&!esAdmin()">@if(form.controls.usuario.touched&&form.controls.usuario.invalid){<small class="error">Usa de 3 a 40 letras, números, puntos o guiones.</small>}
-<label for="usuario-nombre">Nombre completo</label><input id="usuario-nombre" formControlName="nombre" maxlength="120">@if(form.controls.nombre.touched&&form.controls.nombre.invalid){<small class="error">Ingresa un nombre de hasta 120 caracteres.</small>}
-<label for="usuario-email">Correo electrónico</label><input id="usuario-email" type="email" formControlName="email" maxlength="150">@if(form.controls.email.touched&&form.controls.email.invalid){<small class="error">Ingresa un correo válido.</small>}
-@if(!editando()){<label for="usuario-password">Contraseña inicial</label><input id="usuario-password" type="password" formControlName="password" autocomplete="new-password" maxlength="72"><small class="muted">Entre 8 y 72 caracteres.</small>@if(form.controls.password.touched&&form.controls.password.invalid){<small class="error">La contraseña debe tener entre 8 y 72 caracteres.</small>}}
-@if(esAdmin()){<label for="usuario-rol">Rol</label><select id="usuario-rol" formControlName="rol" (change)="reglas()">@if(editando()?.rol==='ADMIN'){<option value="ADMIN">Administrador</option>}<option value="SUPERVISOR">Supervisor</option><option value="ASESOR">Asesor</option></select>@if(form.controls.rol.value==='ASESOR'){<label for="usuario-supervisor">Supervisor</label><select id="usuario-supervisor" formControlName="supervisorId"><option [ngValue]="null">Selecciona un supervisor activo</option>@for(s of supervisores();track s.id){<option [ngValue]="s.id">{{s.nombre}} ({{s.usuario}})</option>}</select>@if(!supervisores().length){<p class="error">Crea o activa un supervisor antes de registrar asesores.</p>}}}
-@else{<p class="muted">Rol: ASESOR. El usuario pertenece a tu equipo.</p>}
-@if(errorModal()){<p class="error" role="alert">{{errorModal()}}</p>}<div class="actions"><button class="secondary" type="button" (click)="formVisible.set(false)" [disabled]="ocupado()">Cancelar</button><button type="submit" [disabled]="form.invalid||ocupado()">{{ocupado()?'Guardando…':editando()?'Guardar cambios':'Crear usuario'}}</button></div></form></section></div>}
-@if(estado();as u){<div class="modal-backdrop"><section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="estado-titulo"><h2 id="estado-titulo">{{u.activo?'Desactivar':'Activar'}} usuario</h2><p>¿Deseas {{u.activo?'desactivar':'activar'}} a <strong>{{u.nombre}}</strong> ({{u.usuario}})?</p>@if(u.activo){<p class="muted">No podrá iniciar sesión hasta que se reactive.</p>}@if(errorModal()){<p class="error" role="alert">{{errorModal()}}</p>}<div class="actions"><button class="secondary" (click)="estado.set(null)" [disabled]="ocupado()">Cancelar</button><button (click)="confirmarEstado()" [disabled]="ocupado()">Confirmar {{u.activo?'desactivación':'activación'}}</button></div></section></div>}
-@if(clave();as u){<div class="modal-backdrop"><section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="clave-titulo"><h2 id="clave-titulo">Restablecer contraseña</h2><p>Usuario: <strong>{{u.usuario}}</strong></p><form [formGroup]="passwordForm" (ngSubmit)="restablecer()"><label for="nueva-password">Nueva contraseña</label><input id="nueva-password" type="password" formControlName="password" maxlength="72" autocomplete="new-password"><small class="muted">Entre 8 y 72 caracteres.</small><label for="confirmar-password">Confirmar contraseña</label><input id="confirmar-password" type="password" formControlName="confirmacion" maxlength="72" autocomplete="new-password">@if(passwordForm.controls.confirmacion.touched&&passwordForm.errors?.['coincidencia']){<p class="error">Las contraseñas no coinciden.</p>}@if(errorModal()){<p class="error" role="alert">{{errorModal()}}</p>}<div class="actions"><button type="button" class="secondary" (click)="clave.set(null)" [disabled]="ocupado()">Cancelar</button><button type="submit" [disabled]="passwordForm.invalid||ocupado()">Restablecer contraseña</button></div></form></section></div>}
+
+@if (isFormVisible()) {
+  <div class="modal-backdrop">
+    <section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="usuario-titulo">
+      <h2 id="usuario-titulo">{{ editingUser() ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
+      <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+        <label for="usuario-cuenta">Usuario</label>
+        <input id="usuario-cuenta" formControlName="usuario" autocomplete="off" maxlength="40" [readonly]="!!editingUser() && !isAdmin()">
+        @if (userForm.controls.usuario.touched && userForm.controls.usuario.invalid) {
+          <small class="error">Usa de 3 a 40 letras, números, puntos o guiones.</small>
+        }
+
+        <label for="usuario-nombre">Nombre completo</label>
+        <input id="usuario-nombre" formControlName="nombre" maxlength="120">
+        @if (userForm.controls.nombre.touched && userForm.controls.nombre.invalid) {
+          <small class="error">Ingresa un nombre de hasta 120 caracteres.</small>
+        }
+
+        <label for="usuario-email">Correo electrónico</label>
+        <input id="usuario-email" type="email" formControlName="email" maxlength="150">
+        @if (userForm.controls.email.touched && userForm.controls.email.invalid) {
+          <small class="error">Ingresa un correo válido.</small>
+        }
+
+        @if (!editingUser()) {
+          <label for="usuario-password">Contraseña inicial</label>
+          <input id="usuario-password" type="password" formControlName="password" autocomplete="new-password" maxlength="72">
+          <small class="muted">Entre 8 y 72 caracteres.</small>
+          @if (userForm.controls.password.touched && userForm.controls.password.invalid) {
+            <small class="error">La contraseña debe tener entre 8 y 72 caracteres.</small>
+          }
+        }
+
+        @if (isAdmin()) {
+          <label for="usuario-rol">Rol</label>
+          <select id="usuario-rol" formControlName="rol" (change)="updateValidationRules()">
+            @if (editingUser()?.rol === 'ADMIN') {
+              <option value="ADMIN">Administrador</option>
+            }
+            <option value="SUPERVISOR">Supervisor</option>
+            <option value="ASESOR">Asesor</option>
+          </select>
+
+          @if (userForm.controls.rol.value === 'ASESOR') {
+            <label for="usuario-supervisor">Supervisor</label>
+            <select id="usuario-supervisor" formControlName="supervisorId">
+              <option [ngValue]="null">Selecciona un supervisor activo</option>
+              @for (s of supervisorsList(); track s.id) {
+                <option [ngValue]="s.id">{{ s.nombre }} ({{ s.usuario }})</option>
+              }
+            </select>
+            @if (!supervisorsList().length) {
+              <p class="error">Crea o activa un supervisor antes de registrar asesores.</p>
+            }
+          }
+        } @else {
+          <p class="muted">Rol: ASESOR. El usuario pertenece a tu equipo.</p>
+        }
+
+        @if (modalErrorMessage()) {
+          <p class="error" role="alert">{{ modalErrorMessage() }}</p>
+        }
+        <div class="actions">
+          <button class="secondary" type="button" (click)="isFormVisible.set(false)" [disabled]="isBusy()">Cancelar</button>
+          <button type="submit" [disabled]="userForm.invalid || isBusy()">
+            {{ isBusy() ? 'Guardando…' : editingUser() ? 'Guardar cambios' : 'Crear usuario' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (userToToggleStatus(); as u) {
+  <div class="modal-backdrop">
+    <section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="estado-titulo">
+      <h2 id="estado-titulo">{{ u.activo ? 'Desactivar' : 'Activar' }} usuario</h2>
+      <p>¿Deseas {{ u.activo ? 'desactivar' : 'activar' }} a <strong>{{ u.nombre }}</strong> ({{ u.usuario }})?</p>
+      @if (u.activo) {
+        <p class="muted">No podrá iniciar sesión hasta que se reactive.</p>
+      }
+      @if (modalErrorMessage()) {
+        <p class="error" role="alert">{{ modalErrorMessage() }}</p>
+      }
+      <div class="actions">
+        <button class="secondary" (click)="userToToggleStatus.set(null)" [disabled]="isBusy()">Cancelar</button>
+        <button (click)="confirmToggleStatus()" [disabled]="isBusy()">
+          Confirmar {{ u.activo ? 'desactivación' : 'activación' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (userToResetPassword(); as u) {
+  <div class="modal-backdrop">
+    <section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="clave-titulo">
+      <h2 id="clave-titulo">Restablecer contraseña</h2>
+      <p>Usuario: <strong>{{ u.usuario }}</strong></p>
+      <form [formGroup]="passwordForm" (ngSubmit)="resetPassword()">
+        <label for="nueva-password">Nueva contraseña</label>
+        <input id="nueva-password" type="password" formControlName="password" maxlength="72" autocomplete="new-password">
+        <small class="muted">Entre 8 y 72 caracteres.</small>
+        <label for="confirmar-password">Confirmar contraseña</label>
+        <input id="confirmar-password" type="password" formControlName="confirmacion" maxlength="72" autocomplete="new-password">
+        @if (passwordForm.controls.confirmacion.touched && passwordForm.errors?.['coincidencia']) {
+          <p class="error">Las contraseñas no coinciden.</p>
+        }
+        @if (modalErrorMessage()) {
+          <p class="error" role="alert">{{ modalErrorMessage() }}</p>
+        }
+        <div class="actions">
+          <button type="button" class="secondary" (click)="userToResetPassword.set(null)" [disabled]="isBusy()">Cancelar</button>
+          <button type="submit" [disabled]="passwordForm.invalid || isBusy()">Restablecer contraseña</button>
+        </div>
+      </form>
+    </section>
+  </div>
+}

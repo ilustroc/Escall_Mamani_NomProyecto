@@ -10,32 +10,38 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-/** Genera los tokens JWT que el panel envía en cada petición (cabecera Authorization: Bearer ...). */
+/**
+ * JWT Token Generation and Signing Service for API Authorization.
+ */
 @Service
 public class JwtService {
 
     private final JwtEncoder encoder;
-    private final long horasExpiracion;
+    private final long expirationHours;
 
-    public JwtService(JwtEncoder encoder, @Value("${app.jwt.horas-expiracion}") long horasExpiracion) {
+    public JwtService(JwtEncoder encoder, @Value("${app.jwt.horas-expiracion}") long expirationHours) {
         this.encoder = encoder;
-        this.horasExpiracion = horasExpiracion;
+        this.expirationHours = expirationHours;
+    }
+
+    public TokenGenerado generateToken(Usuario user) {
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(expirationHours, ChronoUnit.HOURS);
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("crm-cobranzas")
+                .issuedAt(now)
+                .expiresAt(expiresAt)
+                .subject(user.getUsuario())
+                .claim("nombre", user.getNombre())
+                .claim("roles", List.of(user.getRol().name()))
+                .build();
+        JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
+        String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+        return new TokenGenerado(token, expiresAt);
     }
 
     public TokenGenerado generar(Usuario usuario) {
-        Instant ahora = Instant.now();
-        Instant expira = ahora.plus(horasExpiracion, ChronoUnit.HOURS);
-        JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("crm-cobranzas")
-                .issuedAt(ahora)
-                .expiresAt(expira)
-                .subject(usuario.getUsuario())
-                .claim("nombre", usuario.getNombre())
-                .claim("roles", List.of(usuario.getRol().name()))
-                .build();
-        JwsHeader cabecera = JwsHeader.with(MacAlgorithm.HS256).build();
-        String token = encoder.encode(JwtEncoderParameters.from(cabecera, claims)).getTokenValue();
-        return new TokenGenerado(token, expira);
+        return generateToken(usuario);
     }
 
     public record TokenGenerado(String valor, Instant expiraEn) {

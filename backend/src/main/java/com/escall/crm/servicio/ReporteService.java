@@ -14,13 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** Reportes de gestiones, pagos y promesas (RF13 - RF15), limitados según el rol. */
+/**
+ * Report Generation Service for managements, payments, and promises (RF13 - RF15), role-scoped.
+ */
 @Service
 @RequiredArgsConstructor
 public class ReporteService {
 
-    /** Límite de filas por reporte para no saturar el navegador. */
-    private static final PageRequest LIMITE = PageRequest.of(0, 5_000);
+    /** Maximum row limit per report to avoid browser overload. */
+    private static final PageRequest REPORT_ROW_LIMIT = PageRequest.of(0, 5_000);
 
     private final GestionRepository gestiones;
     private final PagoRepository pagos;
@@ -29,25 +31,57 @@ public class ReporteService {
     private final Reloj reloj;
 
     @Transactional(readOnly = true)
+    public List<GestionDto> getManagementReport(Filtros filters) {
+        AlcanceConsulta.Alcance a = alcanceConsulta.resolver(filters);
+        return gestiones.delPeriodo(
+                a.desde().atStartOfDay(),
+                a.hasta().plusDays(1).atStartOfDay(),
+                a.asesores(),
+                a.cartera(),
+                a.cosecha(),
+                REPORT_ROW_LIMIT
+        ).stream().map(g -> GestionDto.desde(g, true)).toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<GestionDto> gestiones(Filtros f) {
-        AlcanceConsulta.Alcance a = alcanceConsulta.resolver(f);
-        return gestiones.delPeriodo(a.desde().atStartOfDay(), a.hasta().plusDays(1).atStartOfDay(), a.asesores(),
-                        a.cartera(), a.cosecha(), LIMITE)
-                .stream().map(g -> GestionDto.desde(g, true)).toList();
+        return getManagementReport(f);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PromesaDto> getPromisesReport(Filtros filters) {
+        AlcanceConsulta.Alcance a = alcanceConsulta.resolver(filters);
+        return promesas.delPeriodo(
+                a.desde().atStartOfDay(),
+                a.hasta().plusDays(1).atStartOfDay(),
+                a.asesores(),
+                a.cartera(),
+                a.cosecha(),
+                REPORT_ROW_LIMIT
+        ).stream().map(p -> PromesaDto.desde(p, reloj.today(), true)).toList();
     }
 
     @Transactional(readOnly = true)
     public List<PromesaDto> promesas(Filtros f) {
-        AlcanceConsulta.Alcance a = alcanceConsulta.resolver(f);
-        return promesas.delPeriodo(a.desde().atStartOfDay(), a.hasta().plusDays(1).atStartOfDay(), a.asesores(),
-                        a.cartera(), a.cosecha(), LIMITE)
-                .stream().map(p -> PromesaDto.desde(p, reloj.hoy(), true)).toList();
+        return getPromisesReport(f);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PagoDto> getPaymentsReport(Filtros filters) {
+        AlcanceConsulta.Alcance a = alcanceConsulta.resolver(filters);
+        return pagos.delPeriodo(
+                a.desde(),
+                a.hasta(),
+                a.todos(),
+                a.asesores(),
+                a.cartera(),
+                a.cosecha(),
+                REPORT_ROW_LIMIT
+        ).stream().map(fila -> PagoDto.desde((Pago) fila[0], (Usuario) fila[1], true)).toList();
     }
 
     @Transactional(readOnly = true)
     public List<PagoDto> pagos(Filtros f) {
-        AlcanceConsulta.Alcance a = alcanceConsulta.resolver(f);
-        return pagos.delPeriodo(a.desde(), a.hasta(), a.todos(), a.asesores(), a.cartera(), a.cosecha(), LIMITE)
-                .stream().map(fila -> PagoDto.desde((Pago) fila[0], (Usuario) fila[1], true)).toList();
+        return getPaymentsReport(f);
     }
 }

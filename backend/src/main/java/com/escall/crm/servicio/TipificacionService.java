@@ -16,7 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** Árbol de tipificaciones (RF09 y RF22). Nada se borra: se desactiva para conservar el historial. */
+/**
+ * Typification Tree Configuration Service (RF09 and RF22).
+ * Logical deletion ensures historical audit trails remain intact.
+ */
 @Service
 @RequiredArgsConstructor
 public class TipificacionService {
@@ -27,59 +30,83 @@ public class TipificacionService {
     private final AuditoriaService auditoria;
 
     @Transactional(readOnly = true)
-    public List<TipificacionDto> arbol(boolean soloActivos) {
+    public List<TipificacionDto> getTypologyTree(boolean onlyActive) {
         return n1Repo.findAllByOrderByOrdenAscNombreAsc().stream()
-                .filter(n1 -> !soloActivos || n1.isActivo())
-                .map(n1 -> TipificacionDto.desde(n1, soloActivos))
+                .filter(n1 -> !onlyActive || n1.isActivo())
+                .map(n1 -> TipificacionDto.desde(n1, onlyActive))
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<TipificacionDto> arbol(boolean soloActivos) {
+        return getTypologyTree(soloActivos);
+    }
+
     @Transactional
-    public TipificacionDto guardarN1(Long id, TipificacionN1Request req) {
-        String nombre = req.nombre().trim();
-        boolean duplicado = id == null ? n1Repo.existsByNombreIgnoreCase(nombre)
-                : n1Repo.existsByNombreIgnoreCaseAndIdNot(nombre, id);
-        if (duplicado) {
+    public TipificacionDto saveLevel1(Long id, TipificacionN1Request req) {
+        String name = req.nombre().trim();
+        boolean isDuplicate = id == null
+                ? n1Repo.existsByNombreIgnoreCase(name)
+                : n1Repo.existsByNombreIgnoreCaseAndIdNot(name, id);
+        if (isDuplicate) {
             throw new ReglaNegocioException("Ya existe un nivel 1 con ese nombre");
         }
-        TipificacionN1 n1 = id == null ? new TipificacionN1()
+        TipificacionN1 n1 = id == null
+                ? new TipificacionN1()
                 : n1Repo.findById(id).orElseThrow(() -> new RecursoNoEncontradoException("Tipificación no encontrada"));
-        n1.setNombre(nombre);
+
+        n1.setNombre(name);
         n1.setEsContacto(req.esContacto());
         n1.setOrden(req.orden());
         n1.setActivo(req.activo());
         n1 = n1Repo.save(n1);
+
         auditoria.registrar(usuarioActual.obtener().getUsuario(), id == null ? "CREAR" : "EDITAR",
-                "TipificacionN1", n1.getId(), nombre + (req.activo() ? "" : " (inactiva)"));
+                "TipificacionN1", n1.getId(), name + (req.activo() ? "" : " (inactiva)"));
         return TipificacionDto.desde(n1, false);
     }
 
     @Transactional
-    public TipificacionDto.Resultado guardarN2(Long id, TipificacionN2Request req) {
-        String nombre = req.nombre().trim();
+    public TipificacionDto guardarN1(Long id, TipificacionN1Request req) {
+        return saveLevel1(id, req);
+    }
+
+    @Transactional
+    public TipificacionDto.Resultado saveLevel2(Long id, TipificacionN2Request req) {
+        String name = req.nombre().trim();
         TipificacionN1 n1 = n1Repo.findById(req.n1Id())
                 .orElseThrow(() -> new RecursoNoEncontradoException("El nivel 1 no existe"));
-        boolean duplicado = id == null ? n2Repo.existsByN1IdAndNombreIgnoreCase(n1.getId(), nombre)
-                : n2Repo.existsByN1IdAndNombreIgnoreCaseAndIdNot(n1.getId(), nombre, id);
-        if (duplicado) {
+
+        boolean isDuplicate = id == null
+                ? n2Repo.existsByN1IdAndNombreIgnoreCase(n1.getId(), name)
+                : n2Repo.existsByN1IdAndNombreIgnoreCaseAndIdNot(n1.getId(), name, id);
+        if (isDuplicate) {
             throw new ReglaNegocioException("Ese resultado ya existe dentro de \"" + n1.getNombre() + "\"");
         }
-        TipificacionN2 n2 = id == null ? new TipificacionN2()
+
+        TipificacionN2 n2 = id == null
+                ? new TipificacionN2()
                 : n2Repo.findById(id).orElseThrow(() -> new RecursoNoEncontradoException("Tipificación no encontrada"));
+
         n2.setN1(n1);
-        n2.setNombre(nombre);
+        n2.setNombre(name);
         n2.setRequiereCompromiso(req.requiereCompromiso());
         n2.setOrden(req.orden());
         n2.setActivo(req.activo());
         n2 = n2Repo.save(n2);
+
         auditoria.registrar(usuarioActual.obtener().getUsuario(), id == null ? "CREAR" : "EDITAR",
-                "TipificacionN2", n2.getId(), n1.getNombre() + " > " + nombre);
+                "TipificacionN2", n2.getId(), n1.getNombre() + " > " + name);
         return TipificacionDto.Resultado.desde(n2);
     }
 
-    /** Borrado lógico: la tipificación queda inactiva y sigue visible en el historial de gestiones. */
     @Transactional
-    public void desactivarN1(Long id) {
+    public TipificacionDto.Resultado guardarN2(Long id, TipificacionN2Request req) {
+        return saveLevel2(id, req);
+    }
+
+    @Transactional
+    public void deactivateLevel1(Long id) {
         TipificacionN1 n1 = n1Repo.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipificación no encontrada"));
         n1.setActivo(false);
@@ -88,14 +115,23 @@ public class TipificacionService {
                 "TipificacionN1", n1.getId(), n1.getNombre());
     }
 
-    /** Borrado lógico de un resultado de nivel 2 (ver desactivarN1). */
     @Transactional
-    public void desactivarN2(Long id) {
+    public void desactivarN1(Long id) {
+        deactivateLevel1(id);
+    }
+
+    @Transactional
+    public void deactivateLevel2(Long id) {
         TipificacionN2 n2 = n2Repo.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Tipificación no encontrada"));
         n2.setActivo(false);
         n2Repo.save(n2);
         auditoria.registrar(usuarioActual.obtener().getUsuario(), "DESACTIVAR",
                 "TipificacionN2", n2.getId(), n2.getN1().getNombre() + " > " + n2.getNombre());
+    }
+
+    @Transactional
+    public void desactivarN2(Long id) {
+        deactivateLevel2(id);
     }
 }

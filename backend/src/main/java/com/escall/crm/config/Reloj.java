@@ -7,21 +7,38 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-/** Fecha y hora "de la operación" (Lima por defecto), sin depender de la zona del servidor. */
+/**
+ * Operational Clock and Timezone Provider (Lima by default).
+ * Provides consistent operational date and time independent of server host clock.
+ */
 @Component
 public class Reloj {
 
-    private final ZoneId zona;
+    private final ZoneId zoneId;
 
-    public Reloj(@Value("${app.zona-horaria}") String zonaHoraria) {
-        this.zona = ZoneId.of(zonaHoraria);
+    public Reloj(@Value("${app.zona-horaria}") String timeZone) {
+        this.zoneId = ZoneId.of(timeZone);
     }
 
+    public LocalDate today() {
+        return LocalDate.now(zoneId);
+    }
+
+    public LocalDateTime now() {
+        return LocalDateTime.now(zoneId);
+    }
+
+    public ZoneId getZoneId() {
+        return zoneId;
+    }
+
+    /** Compatibility alias */
     public LocalDate hoy() {
-        return LocalDate.now(zona);
+        return today();
     }
 
+    /** Compatibility alias */
     public LocalDateTime ahora() {
-        return LocalDateTime.now(zona);
+        return now();
     }
 }

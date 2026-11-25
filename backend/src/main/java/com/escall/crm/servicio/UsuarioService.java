@@ -17,16 +17,15 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Administración de usuarios.
- *  - RF16: el SUPERVISOR crea asesores, edita nombre/correo, cambia contraseña y activa/desactiva
- *          SOLO a los asesores de su equipo.
- *  - RF17: el ADMINISTRADOR gestiona supervisores y asesores (crear, editar, activar, restablecer).
+ * User and Team Access Management Service.
+ *  - RF16: SUPERVISOR manages advisors on their assigned team.
+ *  - RF17: ADMIN manages supervisors and advisors system-wide.
  */
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
 
-    private static final int LONGITUD_MINIMA = 8;
+    private static final int MIN_PASSWORD_LENGTH = 8;
 
     private final UsuarioRepository usuarios;
     private final PasswordEncoder passwordEncoder;
@@ -34,116 +33,152 @@ public class UsuarioService {
     private final AuditoriaService auditoria;
 
     @Transactional(readOnly = true)
-    public List<UsuarioDto> listar() {
-        Usuario yo = usuarioActual.obtener();
-        List<Usuario> lista = yo.getRol() == Rol.ADMIN
+    public List<UsuarioDto> getAllUsers() {
+        Usuario me = usuarioActual.obtener();
+        List<Usuario> list = me.getRol() == Rol.ADMIN
                 ? usuarios.findAllByOrderByRolAscNombreAsc()
-                : usuarios.findBySupervisorIdOrderByNombreAsc(yo.getId());
-        return lista.stream().map(UsuarioDto::desde).toList();
+                : usuarios.findBySupervisorIdOrderByNombreAsc(me.getId());
+        return list.stream().map(UsuarioDto::desde).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<UsuarioDto> listar() {
+        return getAllUsers();
+    }
+
+    @Transactional(readOnly = true)
+    public List<UsuarioDto> getActiveSupervisors() {
+        return usuarios.findByRolOrderByNombreAsc(Rol.SUPERVISOR).stream()
+                .filter(Usuario::isActivo)
+                .map(UsuarioDto::desde)
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<UsuarioDto> supervisores() {
-        return usuarios.findByRolOrderByNombreAsc(Rol.SUPERVISOR).stream().filter(Usuario::isActivo)
-                .map(UsuarioDto::desde).toList();
+        return getActiveSupervisors();
     }
 
     @Transactional
-    public UsuarioDto crear(UsuarioRequest req) {
-        Usuario yo = usuarioActual.obtener();
-        String usuario = req.usuario().trim().toLowerCase(Locale.ROOT);
+    public UsuarioDto createUser(UsuarioRequest req) {
+        Usuario me = usuarioActual.obtener();
+        String username = req.usuario().trim().toLowerCase(Locale.ROOT);
         String email = req.email().trim().toLowerCase(Locale.ROOT);
-        if (usuarios.existsByUsuarioIgnoreCase(usuario)) {
-            throw new ReglaNegocioException("Ya existe el usuario \"" + usuario + "\"");
+
+        if (usuarios.existsByUsuarioIgnoreCase(username)) {
+            throw new ReglaNegocioException("Ya existe el usuario \"" + username + "\"");
         }
         if (usuarios.existsByEmailIgnoreCase(email)) {
             throw new ReglaNegocioException("Ya existe un usuario con ese correo");
         }
-        validarPassword(req.password());
+        validatePassword(req.password());
 
         Usuario u = new Usuario();
-        u.setUsuario(usuario);
+        u.setUsuario(username);
         u.setNombre(req.nombre().trim());
         u.setEmail(email);
         u.setPasswordHash(passwordEncoder.encode(req.password()));
-        if (yo.getRol() == Rol.SUPERVISOR) {
-            // El supervisor solo crea asesores, y quedan en SU equipo
+
+        if (me.getRol() == Rol.SUPERVISOR) {
             u.setRol(Rol.ASESOR);
-            u.setSupervisor(yo);
+            u.setSupervisor(me);
         } else {
             u.setRol(req.rol());
-            u.setSupervisor(supervisorPara(req));
+            u.setSupervisor(resolveSupervisor(req));
         }
+
         usuarios.save(u);
-        auditoria.registrar(yo.getUsuario(), "CREAR", "Usuario", u.getId(), u.getUsuario() + " (" + u.getRol() + ")");
+        auditoria.registrar(me.getUsuario(), "CREAR", "Usuario", u.getId(), u.getUsuario() + " (" + u.getRol() + ")");
+        return UsuarioDto.desde(u);
+    }
+
+    @Transactional
+    public UsuarioDto crear(UsuarioRequest req) {
+        return createUser(req);
+    }
+
+    @Transactional
+    public UsuarioDto updateUser(Long id, UsuarioRequest req) {
+        Usuario me = usuarioActual.obtener();
+        Usuario u = findManageableUser(me, id);
+        String username = req.usuario().trim().toLowerCase(Locale.ROOT);
+        String email = req.email().trim().toLowerCase(Locale.ROOT);
+
+        if (!u.getUsuario().equalsIgnoreCase(username) && usuarios.existsByUsuarioIgnoreCase(username)) {
+            throw new ReglaNegocioException("Ya existe el usuario \"" + username + "\"");
+        }
+        if (!u.getEmail().equalsIgnoreCase(email) && usuarios.existsByEmailIgnoreCase(email)) {
+            throw new ReglaNegocioException("Ya existe un usuario con ese correo");
+        }
+
+        u.setNombre(req.nombre().trim());
+        u.setEmail(email);
+
+        if (me.getRol() == Rol.ADMIN) {
+            if (u.getId().equals(me.getId()) && req.rol() != Rol.ADMIN) {
+                throw new ReglaNegocioException("No puedes quitarte el rol de administrador");
+            }
+            u.setUsuario(username);
+            u.setRol(req.rol());
+            u.setSupervisor(resolveSupervisor(req));
+        }
+
+        auditoria.registrar(me.getUsuario(), "EDITAR", "Usuario", u.getId(), u.getUsuario());
         return UsuarioDto.desde(u);
     }
 
     @Transactional
     public UsuarioDto actualizar(Long id, UsuarioRequest req) {
-        Usuario yo = usuarioActual.obtener();
-        Usuario u = buscarGestionable(yo, id);
-        String usuario = req.usuario().trim().toLowerCase(Locale.ROOT);
-        String email = req.email().trim().toLowerCase(Locale.ROOT);
-        if (!u.getUsuario().equalsIgnoreCase(usuario) && usuarios.existsByUsuarioIgnoreCase(usuario)) {
-            throw new ReglaNegocioException("Ya existe el usuario \"" + usuario + "\"");
+        return updateUser(id, req);
+    }
+
+    @Transactional
+    public UsuarioDto updateUserStatus(Long id, boolean active) {
+        Usuario me = usuarioActual.obtener();
+        Usuario u = findManageableUser(me, id);
+        if (u.getId().equals(me.getId())) {
+            throw new ReglaNegocioException("No puedes desactivar tu propio usuario");
         }
-        if (!u.getEmail().equalsIgnoreCase(email) && usuarios.existsByEmailIgnoreCase(email)) {
-            throw new ReglaNegocioException("Ya existe un usuario con ese correo");
-        }
-        u.setNombre(req.nombre().trim());
-        u.setEmail(email);
-        if (yo.getRol() == Rol.ADMIN) {
-            // Solo el administrador cambia usuario, rol y supervisor
-            if (u.getId().equals(yo.getId()) && req.rol() != Rol.ADMIN) {
-                throw new ReglaNegocioException("No puedes quitarte el rol de administrador");
-            }
-            u.setUsuario(usuario);
-            u.setRol(req.rol());
-            u.setSupervisor(supervisorPara(req));
-        }
-        auditoria.registrar(yo.getUsuario(), "EDITAR", "Usuario", u.getId(), u.getUsuario());
+        u.setActivo(active);
+        auditoria.registrar(me.getUsuario(), active ? "ACTIVAR" : "DESACTIVAR", "Usuario", u.getId(), u.getUsuario());
         return UsuarioDto.desde(u);
     }
 
     @Transactional
     public UsuarioDto cambiarEstado(Long id, boolean activo) {
-        Usuario yo = usuarioActual.obtener();
-        Usuario u = buscarGestionable(yo, id);
-        if (u.getId().equals(yo.getId())) {
-            throw new ReglaNegocioException("No puedes desactivar tu propio usuario");
-        }
-        u.setActivo(activo);
-        auditoria.registrar(yo.getUsuario(), activo ? "ACTIVAR" : "DESACTIVAR", "Usuario", u.getId(), u.getUsuario());
-        return UsuarioDto.desde(u);
+        return updateUserStatus(id, activo);
+    }
+
+    @Transactional
+    public void updatePassword(Long id, String password) {
+        Usuario me = usuarioActual.obtener();
+        Usuario u = findManageableUser(me, id);
+        validatePassword(password);
+        u.setPasswordHash(passwordEncoder.encode(password));
+        auditoria.registrar(me.getUsuario(), "CAMBIAR_PASSWORD", "Usuario", u.getId(), u.getUsuario());
     }
 
     @Transactional
     public void cambiarPassword(Long id, String password) {
-        Usuario yo = usuarioActual.obtener();
-        Usuario u = buscarGestionable(yo, id);
-        validarPassword(password);
-        u.setPasswordHash(passwordEncoder.encode(password));
-        auditoria.registrar(yo.getUsuario(), "CAMBIAR_PASSWORD", "Usuario", u.getId(), u.getUsuario());
+        updatePassword(id, password);
     }
 
-    // ---------------------------------------------------------------- reglas
+    // ---------------------------------------------------------------- Rules and helpers
 
-    /** El admin gestiona a cualquiera; el supervisor solo a los asesores de su equipo. */
-    private Usuario buscarGestionable(Usuario yo, Long id) {
+    private Usuario findManageableUser(Usuario me, Long id) {
         Usuario u = usuarios.findById(id).orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
-        if (yo.getRol() == Rol.ADMIN) {
+        if (me.getRol() == Rol.ADMIN) {
             return u;
         }
-        boolean esDeSuEquipo = u.getRol() == Rol.ASESOR && u.getSupervisor() != null
-                && u.getSupervisor().getId().equals(yo.getId());
-        if (!esDeSuEquipo) {
+        boolean isTeamAdvisor = u.getRol() == Rol.ASESOR && u.getSupervisor() != null
+                && u.getSupervisor().getId().equals(me.getId());
+        if (!isTeamAdvisor) {
             throw new RecursoNoEncontradoException("Usuario no encontrado");
         }
         return u;
     }
 
-    private Usuario supervisorPara(UsuarioRequest req) {
+    private Usuario resolveSupervisor(UsuarioRequest req) {
         if (req.rol() != Rol.ASESOR) {
             return null;
         }
@@ -155,9 +190,9 @@ public class UsuarioService {
                 .orElseThrow(() -> new ReglaNegocioException("El supervisor elegido no existe o está inactivo"));
     }
 
-    private static void validarPassword(String password) {
-        if (password == null || password.length() < LONGITUD_MINIMA) {
-            throw new ReglaNegocioException("La contraseña debe tener al menos " + LONGITUD_MINIMA + " caracteres");
+    private static void validatePassword(String password) {
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH) {
+            throw new ReglaNegocioException("La contraseña debe tener al menos " + MIN_PASSWORD_LENGTH + " caracteres");
         }
     }
 }

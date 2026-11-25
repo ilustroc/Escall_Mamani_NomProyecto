@@ -9,7 +9,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Registra las acciones críticas (RF23): quién, qué, sobre qué y cuándo. */
+/**
+ * Audit Logging Service (RF23): Records critical actions (who, what, entity, and timestamp).
+ */
 @Service
 @RequiredArgsConstructor
 public class AuditoriaService {
@@ -17,19 +19,29 @@ public class AuditoriaService {
     private final AuditoriaRepository repositorio;
 
     @Transactional
-    public void registrar(String usuario, String accion, String entidad, Object entidadId, String detalle) {
+    public void recordAudit(String username, String action, String entityName, Object entityId, String details) {
         Auditoria a = new Auditoria();
-        a.setUsuario(usuario);
-        a.setAccion(accion);
-        a.setEntidad(entidad);
-        a.setEntidadId(entidadId != null ? entidadId.toString() : null);
-        a.setDetalle(detalle != null && detalle.length() > 1000 ? detalle.substring(0, 1000) : detalle);
+        a.setUsuario(username);
+        a.setAccion(action);
+        a.setEntidad(entityName);
+        a.setEntidadId(entityId != null ? entityId.toString() : null);
+        a.setDetalle(details != null && details.length() > 1000 ? details.substring(0, 1000) : details);
         repositorio.save(a);
+    }
+
+    @Transactional
+    public void registrar(String usuario, String accion, String entidad, Object entidadId, String detalle) {
+        recordAudit(usuario, accion, entidad, entidadId, detalle);
+    }
+
+    @Transactional(readOnly = true)
+    public Pagina<AuditoriaDto> listAudit(int page, int size) {
+        return Pagina.desde(repositorio.findAllByOrderByFechaDesc(PageRequest.of(Math.max(page, 0),
+                Math.min(Math.max(size, 1), 100))), AuditoriaDto::desde);
     }
 
     @Transactional(readOnly = true)
     public Pagina<AuditoriaDto> listar(int pagina, int tamano) {
-        return Pagina.desde(repositorio.findAllByOrderByFechaDesc(PageRequest.of(Math.max(pagina, 0),
-                Math.min(Math.max(tamano, 1), 100))), AuditoriaDto::desde);
+        return listAudit(pagina, tamano);
     }
 }

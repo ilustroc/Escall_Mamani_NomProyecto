@@ -1,10 +1,157 @@
-<p class="eyebrow">INTEGRACIÓN DE DATOS</p><h1>Importación de archivos</h1><p class="lead">Carga asignaciones de cartera o pagos y revisa el resultado de cada fila.</p>
-<section class="panel"><div class="section-heading"><h2>Preparar carga</h2><button class="secondary" (click)="plantilla()" [disabled]="cargando()">Descargar plantilla CSV</button></div><label for="carga-tipo">Tipo de carga</label><select id="carga-tipo" [value]="tipo()" (change)="cambiarTipo($any($event.target).value)" [disabled]="cargando()"><option value="asignaciones">Asignaciones de cartera</option><option value="pagos">Pagos</option></select>
-@if(tipo()==='asignaciones'){<p class="muted">Columnas obligatorias: documento, nombres, numero_operacion, entidad, producto, cartera, cosecha, deuda, dias_mora y asesor (nombre de usuario activo). El documento identifica al cliente; una operación existente actualiza sus datos y puede cambiar de asesor.</p>}@else{<p class="muted">Columnas obligatorias: numero_operacion, fecha_pago y monto. Referencia es opcional. La operación debe existir; la fecha no puede ser futura y el monto debe ser mayor que cero.</p>}
-<label for="carga-archivo">Archivo CSV o TXT</label><input #selectorArchivo id="carga-archivo" type="file" accept=".csv,.txt,text/csv,text/plain" (change)="seleccionar($event)" [disabled]="cargando()"><p class="muted">UTF-8 · separador punto y coma o coma · máximo 10 MB y 20 000 filas. Desde Excel, guarda como CSV UTF-8. Para los decimales usa punto; fecha de pago AAAA-MM-DD.</p>
-@if(archivo();as f){<p>Archivo seleccionado: <strong>{{f.name}}</strong> · {{(f.size/1024).toFixed(1)}} KB</p>}
-@if(error()){<p class="error" role="alert">{{error()}}</p>}
-<p class="muted">Las filas válidas se guardan y las rechazadas se informan por separado. Revisa el archivo antes de importarlo.</p><div class="actions"><button class="secondary" (click)="limpiar()" [disabled]="cargando()">Limpiar selección</button><button (click)="importar()" [disabled]="!archivo()||cargando()">{{cargando()?'Procesando archivo…':'Importar archivo'}}</button></div></section>
-@if(resultado();as r){<section class="panel" aria-labelledby="resultado-carga"><h2 id="resultado-carga">Resultado de la importación</h2><p role="status">Carga #{{r.id}} completada: {{r.aceptados}} aceptados y {{r.rechazados}} rechazados de {{r.total}} filas.</p><div class="metrics carga-metrics"><section><span>Total de filas</span><strong>{{r.total}}</strong></section><section><span>Aceptadas</span><strong>{{r.aceptados}}</strong></section><section><span>Rechazadas</span><strong>{{r.rechazados}}</strong></section></div>@if(r.errores.length){<h3>Filas rechazadas</h3><ul class="error-list">@for(e of r.errores;track $index){<li>{{e}}</li>}</ul>}@else{<p class="success">Todas las filas se procesaron correctamente.</p>}</section>}
-<section class="panel"><div class="section-heading"><h2>Historial de cargas</h2><button class="secondary" (click)="cargarHistorial()" [disabled]="consultando()||cargando()">Actualizar historial</button></div>@if(errorHistorial()){<p class="error" role="alert">{{errorHistorial()}}</p>}@if(consultando()){<p role="status">Consultando cargas…</p>}@else{<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Archivo / tipo</th><th>Usuario</th><th>Aceptados</th><th>Rechazados</th><th>Detalle</th></tr></thead><tbody>@for(c of historial();track c.id){<tr><td>{{c.creadoEn|date:'dd/MM/yyyy HH:mm'}}</td><td>{{c.nombreArchivo}}<br><small>{{c.tipo}}</small></td><td>{{c.usuario}}</td><td>{{c.aceptados}}</td><td>{{c.rechazados}}</td><td><button class="secondary" (click)="detalle.set(c)" [attr.aria-label]="'Ver carga '+c.id">Ver resultado</button></td></tr>}@empty{<tr><td colspan="6" class="empty">Todavía no se han importado archivos.</td></tr>}</tbody></table></div><p class="muted">Se muestran las últimas 20 cargas.</p>}</section>
-@if(detalle();as c){<div class="modal-backdrop"><section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="historial-detalle"><h2 id="historial-detalle">Detalle de carga #{{c.id}}</h2><p>{{c.nombreArchivo}} · {{c.tipo}}</p><p>{{c.total}} filas: {{c.aceptados}} aceptadas y {{c.rechazados}} rechazadas.</p>@if(c.errores.length){<ul class="error-list">@for(e of c.errores;track $index){<li>{{e}}</li>}</ul>}@else{<p class="success">No se registraron rechazos.</p>}<div class="actions"><button (click)="detalle.set(null)">Cerrar detalle</button></div></section></div>}
+<p class="eyebrow">INTEGRACIÓN DE DATOS</p>
+<h1>Importación de archivos</h1>
+<p class="lead">Carga asignaciones de cartera o pagos y revisa el resultado de cada fila.</p>
+
+<section class="panel">
+  <div class="section-heading">
+    <h2>Preparar carga</h2>
+    <button class="secondary" (click)="downloadTemplate()" [disabled]="isProcessing()">
+      Descargar plantilla CSV
+    </button>
+  </div>
+
+  <label for="carga-tipo">Tipo de carga</label>
+  <select id="carga-tipo" [value]="batchType()" (change)="changeBatchType($any($event.target).value)" [disabled]="isProcessing()">
+    <option value="asignaciones">Asignaciones de cartera</option>
+    <option value="pagos">Pagos</option>
+  </select>
+
+  @if (batchType() === 'asignaciones') {
+    <p class="muted">
+      Columnas obligatorias: documento, nombres, numero_operacion, entidad, producto, cartera, cosecha, deuda, dias_mora y asesor (nombre de usuario activo). El documento identifica al cliente; una operación existente actualiza sus datos y puede cambiar de asesor.
+    </p>
+  } @else {
+    <p class="muted">
+      Columnas obligatorias: numero_operacion, fecha_pago y monto. Referencia es opcional. La operación debe existir; la fecha no puede ser futura y el monto debe ser mayor que cero.
+    </p>
+  }
+
+  <label for="carga-archivo">Archivo CSV o TXT</label>
+  <input #fileInput id="carga-archivo" type="file" accept=".csv,.txt,text/csv,text/plain" (change)="onFileSelected($event)" [disabled]="isProcessing()">
+  <p class="muted">
+    UTF-8 · separador punto y coma o coma · máximo 10 MB y 20 000 filas. Desde Excel, guarda como CSV UTF-8. Para los decimales usa punto; fecha de pago AAAA-MM-DD.
+  </p>
+
+  @if (selectedFile(); as f) {
+    <p>Archivo seleccionado: <strong>{{ f.name }}</strong> · {{ (f.size / 1024).toFixed(1) }} KB</p>
+  }
+
+  @if (errorMessage()) {
+    <p class="error" role="alert">{{ errorMessage() }}</p>
+  }
+
+  <p class="muted">Las filas válidas se guardan y las rechazadas se informan por separado. Revisa el archivo antes de importarlo.</p>
+
+  <div class="actions">
+    <button class="secondary" (click)="clearSelection()" [disabled]="isProcessing()">Limpiar selección</button>
+    <button (click)="importBatch()" [disabled]="!selectedFile() || isProcessing()">
+      {{ isProcessing() ? 'Procesando archivo…' : 'Importar archivo' }}
+    </button>
+  </div>
+</section>
+
+@if (importResult(); as r) {
+  <section class="panel" aria-labelledby="resultado-carga">
+    <h2 id="resultado-carga">Resultado de la importación</h2>
+    <p role="status">Carga #{{ r.id }} completada: {{ r.aceptados }} aceptados y {{ r.rechazados }} rechazados de {{ r.total }} filas.</p>
+    <div class="metrics carga-metrics">
+      <section>
+        <span>Total de filas</span>
+        <strong>{{ r.total }}</strong>
+      </section>
+      <section>
+        <span>Aceptadas</span>
+        <strong>{{ r.aceptados }}</strong>
+      </section>
+      <section>
+        <span>Rechazadas</span>
+        <strong>{{ r.rechazados }}</strong>
+      </section>
+    </div>
+    @if (r.errores.length) {
+      <h3>Filas rechazadas</h3>
+      <ul class="error-list">
+        @for (e of r.errores; track $index) {
+          <li>{{ e }}</li>
+        }
+      </ul>
+    } @else {
+      <p class="success">Todas las filas se procesaron correctamente.</p>
+    }
+  </section>
+}
+
+<section class="panel">
+  <div class="section-heading">
+    <h2>Historial de cargas</h2>
+    <button class="secondary" (click)="loadHistory()" [disabled]="isHistoryLoading() || isProcessing()">
+      Actualizar historial
+    </button>
+  </div>
+
+  @if (historyErrorMessage()) {
+    <p class="error" role="alert">{{ historyErrorMessage() }}</p>
+  }
+
+  @if (isHistoryLoading()) {
+    <p role="status">Consultando cargas…</p>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Archivo / tipo</th>
+            <th>Usuario</th>
+            <th>Aceptados</th>
+            <th>Rechazados</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of batchHistory(); track c.id) {
+            <tr>
+              <td>{{ c.creadoEn | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ c.nombreArchivo }}<br><small>{{ c.tipo }}</small></td>
+              <td>{{ c.usuario }}</td>
+              <td>{{ c.aceptados }}</td>
+              <td>{{ c.rechazados }}</td>
+              <td>
+                <button class="secondary" (click)="selectedDetail.set(c)" [attr.aria-label]="'Ver carga ' + c.id">
+                  Ver resultado
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="empty">Todavía no se han importado archivos.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Se muestran las últimas 20 cargas.</p>
+  }
+</section>
+
+@if (selectedDetail(); as c) {
+  <div class="modal-backdrop">
+    <section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="historial-detalle">
+      <h2 id="historial-detalle">Detalle de carga #{{ c.id }}</h2>
+      <p>{{ c.nombreArchivo }} · {{ c.tipo }}</p>
+      <p>{{ c.total }} filas: {{ c.aceptados }} aceptadas y {{ c.rechazados }} rechazadas.</p>
+      @if (c.errores.length) {
+        <ul class="error-list">
+          @for (e of c.errores; track $index) {
+            <li>{{ e }}</li>
+          }
+        </ul>
+      } @else {
+        <p class="success">No se registraron rechazos.</p>
+      }
+      <div class="actions">
+        <button (click)="selectedDetail.set(null)">Cerrar detalle</button>
+      </div>
+    </section>
+  </div>
+}

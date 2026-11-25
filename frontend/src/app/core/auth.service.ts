@@ -1,19 +1,70 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { API_URL } from './api.config';
 import { Sesion } from './models';
-@Injectable({providedIn:'root'})
+
+/**
+ * Authentication and Session Management Service.
+ */
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
   private http = inject(HttpClient);
-  readonly sesion = signal<Sesion|null>(this.leer());
-  private leer():Sesion|null {
-    try { const s=JSON.parse(sessionStorage.getItem('escall.sesion')||'null');
-      return s && typeof s.token==='string' && s.usuario && Date.parse(s.expiraEn)>Date.now() ? s : null;
-    } catch { return null; }
+  private readonly storageKey = 'escall.sesion';
+
+  readonly session = signal<Sesion | null>(this.loadStoredSession());
+  /** Compatibility alias */
+  readonly sesion = this.session;
+
+  private loadStoredSession(): Sesion | null {
+    try {
+      const raw = sessionStorage.getItem(this.storageKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.token === 'string' && parsed.usuario && Date.parse(parsed.expiraEn) > Date.now()) {
+        return parsed;
+      }
+      return null;
+    } catch {
+      return null;
+    }
   }
-  vigente():boolean { const s=this.sesion(); return !!s && Date.parse(s.expiraEn)>Date.now(); }
-  login(usuario:string,password:string) { return this.http.post<Sesion>(`${API_URL}/auth/login`,{usuario,password}).pipe(tap(s=>{sessionStorage.setItem('escall.sesion',JSON.stringify(s));this.sesion.set(s);})); }
-  limpiar() { sessionStorage.removeItem('escall.sesion'); this.sesion.set(null); }
-  logout() { return this.http.post<void>(`${API_URL}/auth/logout`,{}); }
+
+  isAuthenticated(): boolean {
+    const current = this.session();
+    return !!current && Date.parse(current.expiraEn) > Date.now();
+  }
+
+  /** Compatibility alias */
+  vigente(): boolean {
+    return this.isAuthenticated();
+  }
+
+  login(username: string, password: string): Observable<Sesion> {
+    return this.http.post<Sesion>(`${API_URL}/auth/login`, {
+      usuario: username,
+      password: password
+    }).pipe(
+      tap(sessionData => {
+        sessionStorage.setItem(this.storageKey, JSON.stringify(sessionData));
+        this.session.set(sessionData);
+      })
+    );
+  }
+
+  clearSession(): void {
+    sessionStorage.removeItem(this.storageKey);
+    this.session.set(null);
+  }
+
+  /** Compatibility alias */
+  limpiar(): void {
+    this.clearSession();
+  }
+
+  logout(): Observable<void> {
+    return this.http.post<void>(`${API_URL}/auth/logout`, {});
+  }
 }

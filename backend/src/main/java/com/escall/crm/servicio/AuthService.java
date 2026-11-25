@@ -13,6 +13,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Authentication and Security Session Service (RF01 - RF02).
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -23,7 +26,7 @@ public class AuthService {
     private final UsuarioActual usuarioActual;
     private final AuditoriaService auditoria;
 
-    /** RF01: inicio de sesión con usuario y contraseña. El intento fallido también queda auditado. */
+    /** RF01: Authenticate with username and password, with security audit trail. */
     @Transactional(noRollbackFor = CredencialesInvalidasException.class)
     public LoginResponse login(LoginRequest req) {
         Usuario u = usuarios.findByUsuarioIgnoreCase(req.usuario().trim())
@@ -38,7 +41,7 @@ public class AuthService {
         return new LoginResponse(token.valor(), token.expiraEn(), UsuarioDto.desde(u));
     }
 
-    /** RF02: el token se descarta en el navegador; aquí dejamos constancia del cierre. */
+    /** RF02: Record user session logout event. */
     @Transactional
     public void logout() {
         Usuario u = usuarioActual.obtener();
@@ -46,7 +49,12 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public UsuarioDto actual() {
+    public UsuarioDto getCurrentUser() {
         return UsuarioDto.desde(usuarioActual.obtener());
+    }
+
+    @Transactional(readOnly = true)
+    public UsuarioDto actual() {
+        return getCurrentUser();
     }
 }

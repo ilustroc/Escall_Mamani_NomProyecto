@@ -1,26 +1,238 @@
-import { Component,computed,inject,signal } from '@angular/core';
-import { FormBuilder,ReactiveFormsModule,Validators } from '@angular/forms';
-import { finalize,forkJoin,of } from 'rxjs';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize, forkJoin, of } from 'rxjs';
 import { OperacionesService } from '../../core/operaciones.service';
 import { AuthService } from '../../core/auth.service';
-import { Rol,Usuario } from '../../core/models';
+import { Rol, Usuario } from '../../core/models';
 import { UsuarioEntrada } from '../../core/operaciones.models';
-import { mensajeError } from '../../core/api-error';
-@Component({selector:'app-usuarios',imports:[ReactiveFormsModule],templateUrl:'./usuarios.html'})
+import { getErrorMessage } from '../../core/api-error';
+
+@Component({
+  selector: 'app-usuarios',
+  imports: [ReactiveFormsModule],
+  templateUrl: './usuarios.html'
+})
 export class UsuariosPage {
- readonly auth=inject(AuthService);private api=inject(OperacionesService);private fb=inject(FormBuilder);
- filas=signal<Usuario[]>([]);supervisores=signal<Usuario[]>([]);busqueda=signal('');cargando=signal(false);ocupado=signal(false);error=signal('');errorModal=signal('');exito=signal('');formVisible=signal(false);editando=signal<Usuario|null>(null);estado=signal<Usuario|null>(null);clave=signal<Usuario|null>(null);
- filtrados=computed(()=>{const q=this.busqueda().toLocaleLowerCase().trim();return this.filas().filter(u=>!q||[u.nombre,u.usuario,u.email,u.rol,u.supervisorNombre].some(v=>v?.toLocaleLowerCase().includes(q)));});
- form=this.fb.nonNullable.group({usuario:['',[Validators.required,Validators.pattern(/^[a-zA-Z0-9._-]{3,40}$/)]],nombre:['',[Validators.required,Validators.maxLength(120),Validators.pattern(/\S/)]],email:['',[Validators.required,Validators.email,Validators.maxLength(150)]],password:[''],rol:['ASESOR' as Rol,Validators.required],supervisorId:[null as number|null]});
- passwordForm=this.fb.nonNullable.group({password:['',[Validators.required,Validators.minLength(8),Validators.maxLength(72)]],confirmacion:['',Validators.required]},{validators:c=>c.get('password')?.value===c.get('confirmacion')?.value?null:{coincidencia:true}});
- constructor(){this.cargar();}
- esAdmin(){return this.auth.sesion()?.usuario.rol==='ADMIN';}
- cargar(){this.cargando.set(true);this.error.set('');forkJoin({usuarios:this.api.usuarios(),supervisores:this.esAdmin()?this.api.supervisores():of([] as Usuario[])}).pipe(finalize(()=>this.cargando.set(false))).subscribe({next:d=>{this.filas.set(d.usuarios);this.supervisores.set(d.supervisores);},error:e=>this.error.set(mensajeError(e))});}
- abrir(u:Usuario|null=null){this.editando.set(u);this.errorModal.set('');this.exito.set('');this.form.reset({usuario:u?.usuario||'',nombre:u?.nombre||'',email:u?.email||'',password:'',rol:u?.rol||'ASESOR',supervisorId:u?.supervisorId||null});this.form.controls.password.setValidators(u?[]:[Validators.required,Validators.minLength(8),Validators.maxLength(72)]);this.form.controls.password.updateValueAndValidity();this.reglas();this.formVisible.set(true);}
- reglas(){const s=this.form.controls.supervisorId;s.setValidators(this.esAdmin()&&this.form.controls.rol.value==='ASESOR'?[Validators.required]:[]);if(this.form.controls.rol.value!=='ASESOR')s.setValue(null);s.updateValueAndValidity();}
- guardar(){if(this.form.invalid||this.ocupado()){this.form.markAllAsTouched();return;}const v=this.form.getRawValue();const u=this.editando();const body:UsuarioEntrada={...v,usuario:v.usuario.trim(),nombre:v.nombre.trim(),email:v.email.trim(),password:u?undefined:v.password};this.ocupado.set(true);this.errorModal.set('');const peticion=u?this.api.editarUsuario(u.id,body):this.api.crearUsuario(body);peticion.pipe(finalize(()=>this.ocupado.set(false))).subscribe({next:d=>{this.formVisible.set(false);this.exito.set(u?'Usuario actualizado correctamente.':'Usuario creado correctamente.');if(d.id===this.auth.sesion()?.usuario.id){const s=this.auth.sesion()!;const actualizado={...s,usuario:d};this.auth.sesion.set(actualizado);sessionStorage.setItem('escall.sesion',JSON.stringify(actualizado));}this.cargar();},error:e=>this.errorModal.set(mensajeError(e))});}
- confirmarEstado(){const u=this.estado();if(!u||this.ocupado())return;this.ocupado.set(true);this.errorModal.set('');this.api.estadoUsuario(u.id,!u.activo).pipe(finalize(()=>this.ocupado.set(false))).subscribe({next:()=>{this.estado.set(null);this.exito.set(u.activo?'Usuario desactivado.':'Usuario activado.');this.cargar();},error:e=>this.errorModal.set(mensajeError(e))});}
- abrirEstado(u:Usuario){this.errorModal.set('');this.estado.set(u);}
- abrirClave(u:Usuario){this.passwordForm.reset();this.errorModal.set('');this.clave.set(u);}
- restablecer(){const u=this.clave();if(!u||this.passwordForm.invalid||this.ocupado())return;this.ocupado.set(true);this.errorModal.set('');this.api.passwordUsuario(u.id,this.passwordForm.getRawValue().password).pipe(finalize(()=>this.ocupado.set(false))).subscribe({next:()=>{this.clave.set(null);this.passwordForm.reset();this.exito.set('Contraseña restablecida correctamente.');},error:e=>this.errorModal.set(mensajeError(e))});}
+  readonly authService = inject(AuthService);
+  private readonly operacionesService = inject(OperacionesService);
+  private readonly fb = inject(FormBuilder);
+
+  readonly usersList = signal<Usuario[]>([]);
+  readonly supervisorsList = signal<Usuario[]>([]);
+  readonly searchQuery = signal('');
+  readonly isLoading = signal(false);
+  readonly isBusy = signal(false);
+  readonly errorMessage = signal('');
+  readonly modalErrorMessage = signal('');
+  readonly successMessage = signal('');
+  readonly isFormVisible = signal(false);
+  readonly editingUser = signal<Usuario | null>(null);
+  readonly userToToggleStatus = signal<Usuario | null>(null);
+  readonly userToResetPassword = signal<Usuario | null>(null);
+
+  readonly filteredUsers = computed(() => {
+    const q = this.searchQuery().toLocaleLowerCase().trim();
+    return this.usersList().filter(
+      (u) =>
+        !q ||
+        [u.nombre, u.usuario, u.email, u.rol, u.supervisorNombre].some((v) =>
+          v?.toLocaleLowerCase().includes(q)
+        )
+    );
+  });
+
+  readonly userForm = this.fb.nonNullable.group({
+    usuario: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]{3,40}$/)]],
+    nombre: ['', [Validators.required, Validators.maxLength(120), Validators.pattern(/\S/)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
+    password: [''],
+    rol: ['ASESOR' as Rol, Validators.required],
+    supervisorId: [null as number | null]
+  });
+
+  readonly passwordForm = this.fb.nonNullable.group(
+    {
+      password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(72)]],
+      confirmacion: ['', Validators.required]
+    },
+    {
+      validators: (c) =>
+        c.get('password')?.value === c.get('confirmacion')?.value ? null : { coincidencia: true }
+    }
+  );
+
+  // Backward compatibility getters
+  get auth() { return this.authService; }
+  get filas() { return this.usersList; }
+  get supervisores() { return this.supervisorsList; }
+  get busqueda() { return this.searchQuery; }
+  get cargando() { return this.isLoading; }
+  get ocupado() { return this.isBusy; }
+  get error() { return this.errorMessage; }
+  get errorModal() { return this.modalErrorMessage; }
+  get exito() { return this.successMessage; }
+  get formVisible() { return this.isFormVisible; }
+  get editando() { return this.editingUser; }
+  get estado() { return this.userToToggleStatus; }
+  get clave() { return this.userToResetPassword; }
+  get filtrados() { return this.filteredUsers; }
+  get form() { return this.userForm; }
+
+  constructor() {
+    this.loadUsers();
+  }
+
+  isAdmin(): boolean {
+    return this.authService.sesion()?.usuario.rol === 'ADMIN';
+  }
+
+  loadUsers(): void {
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    forkJoin({
+      usuarios: this.operacionesService.getUsers(),
+      supervisores: this.isAdmin() ? this.operacionesService.getSupervisors() : of([] as Usuario[])
+    })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (d) => {
+          this.usersList.set(d.usuarios);
+          this.supervisorsList.set(d.supervisores);
+        },
+        error: (err) => this.errorMessage.set(getErrorMessage(err))
+      });
+  }
+
+  openUserModal(user: Usuario | null = null): void {
+    this.editingUser.set(user);
+    this.modalErrorMessage.set('');
+    this.successMessage.set('');
+    this.userForm.reset({
+      usuario: user?.usuario || '',
+      nombre: user?.nombre || '',
+      email: user?.email || '',
+      password: '',
+      rol: user?.rol || 'ASESOR',
+      supervisorId: user?.supervisorId || null
+    });
+    this.userForm.controls.password.setValidators(
+      user ? [] : [Validators.required, Validators.minLength(8), Validators.maxLength(72)]
+    );
+    this.userForm.controls.password.updateValueAndValidity();
+    this.updateValidationRules();
+    this.isFormVisible.set(true);
+  }
+
+  updateValidationRules(): void {
+    const s = this.userForm.controls.supervisorId;
+    s.setValidators(this.isAdmin() && this.userForm.controls.rol.value === 'ASESOR' ? [Validators.required] : []);
+    if (this.userForm.controls.rol.value !== 'ASESOR') {
+      s.setValue(null);
+    }
+    s.updateValueAndValidity();
+  }
+
+  saveUser(): void {
+    if (this.userForm.invalid || this.isBusy()) {
+      this.userForm.markAllAsTouched();
+      return;
+    }
+
+    const v = this.userForm.getRawValue();
+    const u = this.editingUser();
+    const body: UsuarioEntrada = {
+      ...v,
+      usuario: v.usuario.trim(),
+      nombre: v.nombre.trim(),
+      email: v.email.trim(),
+      password: u ? undefined : v.password
+    };
+
+    this.isBusy.set(true);
+    this.modalErrorMessage.set('');
+
+    const request$ = u
+      ? this.operacionesService.updateUser(u.id, body)
+      : this.operacionesService.createUser(body);
+
+    request$.pipe(finalize(() => this.isBusy.set(false))).subscribe({
+      next: (saved) => {
+        this.isFormVisible.set(false);
+        this.successMessage.set(
+          u ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.'
+        );
+        if (saved.id === this.authService.sesion()?.usuario.id) {
+          const current = this.authService.sesion()!;
+          const updated = { ...current, usuario: saved };
+          this.authService.sesion.set(updated);
+          sessionStorage.setItem('escall.sesion', JSON.stringify(updated));
+        }
+        this.loadUsers();
+      },
+      error: (err) => this.modalErrorMessage.set(getErrorMessage(err))
+    });
+  }
+
+  openStatusModal(user: Usuario): void {
+    this.modalErrorMessage.set('');
+    this.userToToggleStatus.set(user);
+  }
+
+  confirmToggleStatus(): void {
+    const u = this.userToToggleStatus();
+    if (!u || this.isBusy()) return;
+
+    this.isBusy.set(true);
+    this.modalErrorMessage.set('');
+
+    this.operacionesService
+      .updateUserStatus(u.id, !u.activo)
+      .pipe(finalize(() => this.isBusy.set(false)))
+      .subscribe({
+        next: () => {
+          this.userToToggleStatus.set(null);
+          this.successMessage.set(u.activo ? 'Usuario desactivado.' : 'Usuario activado.');
+          this.loadUsers();
+        },
+        error: (err) => this.modalErrorMessage.set(getErrorMessage(err))
+      });
+  }
+
+  openPasswordModal(user: Usuario): void {
+    this.passwordForm.reset();
+    this.modalErrorMessage.set('');
+    this.userToResetPassword.set(user);
+  }
+
+  resetPassword(): void {
+    const u = this.userToResetPassword();
+    if (!u || this.passwordForm.invalid || this.isBusy()) return;
+
+    this.isBusy.set(true);
+    this.modalErrorMessage.set('');
+
+    this.operacionesService
+      .updateUserPassword(u.id, this.passwordForm.getRawValue().password)
+      .pipe(finalize(() => this.isBusy.set(false)))
+      .subscribe({
+        next: () => {
+          this.userToResetPassword.set(null);
+          this.passwordForm.reset();
+          this.successMessage.set('Contraseña restablecida correctamente.');
+        },
+        error: (err) => this.modalErrorMessage.set(getErrorMessage(err))
+      });
+  }
+
+  // Backward-compatibility aliases
+  esAdmin(): boolean { return this.isAdmin(); }
+  cargar(): void { this.loadUsers(); }
+  abrir(u: Usuario | null = null): void { this.openUserModal(u); }
+  reglas(): void { this.updateValidationRules(); }
+  guardar(): void { this.saveUser(); }
+  abrirEstado(u: Usuario): void { this.openStatusModal(u); }
+  confirmarEstado(): void { this.confirmToggleStatus(); }
+  abrirClave(u: Usuario): void { this.openPasswordModal(u); }
+  restablecer(): void { this.resetPassword(); }
 }

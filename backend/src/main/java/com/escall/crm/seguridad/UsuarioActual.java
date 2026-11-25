@@ -12,11 +12,10 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * Da acceso al usuario que hizo la petición y define QUÉ ASESORES puede ver:
- *  - ADMIN      -> todos los asesores
- *  - SUPERVISOR -> solo los asesores de su equipo (RF14)
- *  - ASESOR     -> solo él mismo (su cartera)
- * Todos los servicios usan este método para filtrar la información.
+ * Security Context Provider that resolves the authenticated user and their scoped visibility:
+ *  - ADMIN      -> all advisors
+ *  - SUPERVISOR -> only advisors belonging to their team (RF14)
+ *  - ASESOR     -> only self (individual portfolio)
  */
 @Component
 @RequiredArgsConstructor
@@ -24,7 +23,7 @@ public class UsuarioActual {
 
     private final UsuarioRepository usuarios;
 
-    public Usuario obtener() {
+    public Usuario getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
             throw new CredencialesInvalidasException();
@@ -34,16 +33,30 @@ public class UsuarioActual {
                 .orElseThrow(CredencialesInvalidasException::new);
     }
 
-    public List<Long> asesoresVisibles(Usuario u) {
-        return switch (u.getRol()) {
+    public Usuario obtener() {
+        return getCurrentUser();
+    }
+
+    public List<Long> getVisibleAdvisorIds(Usuario user) {
+        return switch (user.getRol()) {
             case ADMIN -> usuarios.idsPorRol(Rol.ASESOR);
-            case SUPERVISOR -> usuarios.idsDelEquipo(u.getId());
-            case ASESOR -> List.of(u.getId());
+            case SUPERVISOR -> usuarios.idsDelEquipo(user.getId());
+            case ASESOR -> List.of(user.getId());
         };
     }
 
-    /** Las consultas "in (:lista)" no aceptan listas vacías: usamos un id imposible. */
-    public static List<Long> noVacia(List<Long> ids) {
+    public List<Long> asesoresVisibles(Usuario u) {
+        return getVisibleAdvisorIds(u);
+    }
+
+    /**
+     * Prevents empty list errors in SQL 'IN (:list)' clauses by supplying a fallback impossible ID.
+     */
+    public static List<Long> nonEmptyList(List<Long> ids) {
         return ids.isEmpty() ? List.of(-1L) : ids;
+    }
+
+    public static List<Long> noVacia(List<Long> ids) {
+        return nonEmptyList(ids);
     }
 }

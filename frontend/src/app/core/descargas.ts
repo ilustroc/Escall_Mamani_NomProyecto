@@ -1,7 +1,26 @@
-// Neutraliza fórmulas de celdas de texto antes de exportar a Excel.
-export function descargarCsv(nombre:string,filas:unknown[][]){
- const celda=(v:unknown)=>{let s=String(v??'');if(/^[\s]*[=+@-]/.test(s)&&typeof v!=='number')s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
- const csv='\uFEFF'+filas.map(f=>f.map(celda).join(';')).join('\r\n')+'\r\n';
- const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
- const a=document.createElement('a');a.href=url;a.download=nombre;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+/**
+ * Utility to download CSV files, sanitizing formulas to prevent CSV injection in Excel.
+ */
+export function downloadCsv(filename: string, rows: unknown[][]): void {
+  const sanitizeCell = (val: unknown): string => {
+    let str = String(val ?? '');
+    if (/^[\s]*[=+@-]/.test(str) && typeof val !== 'number') {
+      str = "'" + str;
+    }
+    return '"' + str.replace(/"/g, '""') + '"';
+  };
+
+  const csvContent = '\uFEFF' + rows.map(row => row.map(sanitizeCell).join(';')).join('\r\n') + '\r\n';
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const objectUrl = URL.createObjectURL(blob);
+
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  anchor.click();
+
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
+
+/** Compatibility alias */
+export const descargarCsv = downloadCsv;
