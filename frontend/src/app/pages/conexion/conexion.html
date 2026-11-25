@@ -1,0 +1,7 @@
+<p class="eyebrow">DISPONIBILIDAD DEL SERVICIO</p><h1>Estado de conexión</h1><p class="lead">Comprueba la comunicación con el servidor antes de comenzar.</p>
+<section class="panel connection"><div class="connection-icon" aria-hidden="true">↗</div><h2>Conexión con Spring Boot</h2>
+  @if(cargando()){<p role="status">Comprobando conexión…</p>}
+  @if(mensaje()){<p class="success" role="status">{{mensaje()}}</p>}
+  @if(error()){<p class="error" role="alert">{{error()}}</p>}
+  <button (click)="comprobar()" [disabled]="cargando()">Comprobar nuevamente</button>
+</section>

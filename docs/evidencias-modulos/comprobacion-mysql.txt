@@ -1,0 +1,8 @@
+documento	numero_operacion	deuda_total	monto	referencia
+96781118	APF3-1811-01	1000.00	125.50	E2E-1811-01
+usuario	activo	tipo_hash
+equipo18	0	$2
+front18	0	$2
+tipo	total	aceptados	rechazados
+PAGO	3	1	2
+ASIGNACION	3	1	2

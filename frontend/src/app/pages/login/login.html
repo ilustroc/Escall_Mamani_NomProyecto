@@ -1,0 +1,10 @@
+<div class="login-wrap"><p class="eyebrow">BIENVENIDO A ESCALL</p><h1>Inicia tu jornada</h1><p class="lead">Accede con tu usuario para gestionar tu cartera.</p>
+<form class="panel" [formGroup]="form" (ngSubmit)="entrar()">
+  <h2>Iniciar sesión</h2>
+  <label for="usuario">Usuario</label><input id="usuario" formControlName="usuario" autocomplete="username" placeholder="Tu usuario">
+  @if(form.controls.usuario.touched && form.controls.usuario.invalid){<small class="error">Ingresa tu usuario.</small>}
+  <label for="password">Contraseña</label><input id="password" type="password" formControlName="password" autocomplete="current-password" placeholder="Tu contraseña">
+  @if(form.controls.password.touched && form.controls.password.invalid){<small class="error">Ingresa tu contraseña.</small>}
+  @if(error()){<p class="error" role="alert">{{error()}}</p>}
+  <button class="full" type="submit" [disabled]="form.invalid || cargando()">{{cargando()?'Ingresando…':'Ingresar'}}</button>
+</form></div>

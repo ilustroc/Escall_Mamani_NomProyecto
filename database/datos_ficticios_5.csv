@@ -1,0 +1,6 @@
+documento,tipo_documento,nombres,telefono,email,direccion,numero_operacion,entidad,producto,cartera,cosecha,deuda,dias_mora,asesor
+DEMO-0001,OTRO,Ana Torres Demo,000000001,ana.demo@example.test,Direccion ficticia 101 Lima,DEMO-OP-001,Banco Demo,Tarjeta de credito,Cartera Demo Tarjetas,2026-09,1250.00,35,demo_asesor
+DEMO-0002,OTRO,Luis Ramos Demo,000000002,luis.demo@example.test,Direccion ficticia 202 Lima,DEMO-OP-002,Financiera Demo,Prestamo personal,Cartera Demo Consumo,2026-08,3480.50,62,demo_asesor
+DEMO-0003,OTRO,Maria Flores Demo,000000003,maria.demo@example.test,Direccion ficticia 303 Lima,DEMO-OP-003,Caja Demo,Credito vehicular,Cartera Demo Vehicular,2026-07,8900.00,91,demo_asesor
+DEMO-0004,OTRO,Carlos Vega Demo,000000004,carlos.demo@example.test,Direccion ficticia 404 Lima,DEMO-OP-004,Banco Demo,Tarjeta de credito,Cartera Demo Tarjetas,2026-10,760.25,18,demo_asesor
+DEMO-0005,OTRO,Rosa Medina Demo,000000005,rosa.demo@example.test,Direccion ficticia 505 Lima,DEMO-OP-005,Financiera Demo,Prestamo personal,Cartera Demo Consumo,2026-09,2150.75,47,demo_asesor

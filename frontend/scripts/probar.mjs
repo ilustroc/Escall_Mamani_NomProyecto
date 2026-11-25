@@ -1,0 +1,10 @@
+import {build} from 'esbuild';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+const integracion=process.argv[2]==='integracion';
+const raiz=fileURLToPath(new URL('../',import.meta.url));
+const origen=integracion?'importacion-integration':'module-logic.test';
+const destino=`tests/.${origen}.mjs`;
+await build({entryPoints:[`tests/${origen}.ts`],absWorkingDir:raiz,bundle:true,platform:'node',format:'esm',packages:'external',outfile:destino});
+const args=integracion?[destino]:['--test',destino];
+const r=spawnSync(process.execPath,args,{cwd:raiz,stdio:'inherit'});process.exitCode=r.status??1;

@@ -1,0 +1,32 @@
+[
+  {
+    "ruta": "/conexion",
+    "http": 200,
+    "bytes": 684,
+    "tipo": "text/html; charset=utf-8"
+  },
+  {
+    "ruta": "/clientes/2",
+    "http": 200,
+    "bytes": 684,
+    "tipo": "text/html; charset=utf-8"
+  },
+  {
+    "ruta": "/main-UEPRQQFF.js",
+    "http": 200,
+    "bytes": 345220,
+    "tipo": "text/javascript; charset=utf-8"
+  },
+  {
+    "ruta": "/styles-6ZWUFVKP.css",
+    "http": 200,
+    "bytes": 6159,
+    "tipo": "text/css; charset=utf-8"
+  },
+  {
+    "ruta": "/logo-escall.png",
+    "http": 200,
+    "bytes": 9378,
+    "tipo": "image/png"
+  }
+]

@@ -1,0 +1,140 @@
+[
+  {
+    "metodo": "POST",
+    "ruta": "/auth/login",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/auth/login",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/auth/login",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/gestiones?periodo=MES",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/gestiones?periodo=MES",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/gestiones?periodo=MES",
+    "http": 403,
+    "esperado": 403
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/pagos?periodo=MES",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/pagos?periodo=MES",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/pagos?periodo=MES",
+    "http": 403,
+    "esperado": 403
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/promesas?periodo=MES",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/promesas?periodo=MES",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/promesas?periodo=MES",
+    "http": 403,
+    "esperado": 403
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/gestiones?desde=2026-11-18&hasta=2026-11-01",
+    "http": 409,
+    "esperado": 409
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/filtros",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/usuarios",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/auth/login",
+    "http": 401,
+    "esperado": 401
+  },
+  {
+    "metodo": "PATCH",
+    "ruta": "/usuarios/7/password",
+    "http": 204,
+    "esperado": 204
+  },
+  {
+    "metodo": "PATCH",
+    "ruta": "/usuarios/7/estado",
+    "http": 404,
+    "esperado": 404
+  },
+  {
+    "metodo": "PUT",
+    "ruta": "/usuarios/7",
+    "http": 404,
+    "esperado": 404
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/usuarios",
+    "http": 403,
+    "esperado": 403
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/admin/integracion/cargas",
+    "http": 403,
+    "esperado": 403
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/admin/integracion/cargas",
+    "http": 403,
+    "esperado": 403
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/usuarios",
+    "http": 401,
+    "esperado": 401
+  }
+]

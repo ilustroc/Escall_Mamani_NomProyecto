@@ -1,0 +1,1 @@
+Registro consultado antes del reinicio: {"id": 13, "documento": "96781117", "direccion": "Dirección actualizada desde Angular"}

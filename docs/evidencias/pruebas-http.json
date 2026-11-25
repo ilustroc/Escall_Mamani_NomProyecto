@@ -1,0 +1,92 @@
+[
+  {
+    "caso": "GET público desde origen Angular",
+    "http": 200,
+    "esperado": 200,
+    "correcto": true
+  },
+  {
+    "caso": "Recurso protegido sin token",
+    "http": 401,
+    "esperado": 401,
+    "correcto": true
+  },
+  {
+    "caso": "Login inválido",
+    "http": 401,
+    "esperado": 401,
+    "correcto": true
+  },
+  {
+    "caso": "Login administrador",
+    "http": 200,
+    "esperado": 200,
+    "correcto": true
+  },
+  {
+    "caso": "Login asesor",
+    "http": 200,
+    "esperado": 200,
+    "correcto": true
+  },
+  {
+    "caso": "Dashboard denegado a asesor",
+    "http": 403,
+    "esperado": 403,
+    "correcto": true
+  },
+  {
+    "caso": "JWT inválido",
+    "http": 401,
+    "esperado": 401,
+    "correcto": true
+  },
+  {
+    "caso": "Cliente creado en Angular recuperado por documento",
+    "http": 200,
+    "esperado": 200,
+    "correcto": true
+  },
+  {
+    "caso": "Datos editados desde Angular",
+    "http": 200,
+    "esperado": 200,
+    "correcto": true
+  },
+  {
+    "caso": "Documento duplicado",
+    "http": 409,
+    "esperado": 409,
+    "correcto": true
+  },
+  {
+    "caso": "Validación del servidor",
+    "http": 400,
+    "esperado": 400,
+    "correcto": true
+  },
+  {
+    "caso": "Asesor sin acceso al cliente sin asignación",
+    "http": 404,
+    "esperado": 404,
+    "correcto": true
+  },
+  {
+    "caso": "Eliminación denegada a asesor",
+    "http": 403,
+    "esperado": 403,
+    "correcto": true
+  },
+  {
+    "caso": "Cliente eliminado desde Angular: detalle devuelve 404",
+    "http": 404,
+    "esperado": 404,
+    "correcto": true
+  },
+  {
+    "caso": "Cliente eliminado: búsqueda vacía",
+    "http": 200,
+    "esperado": 200,
+    "correcto": true
+  }
+]

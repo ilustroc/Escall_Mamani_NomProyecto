@@ -1,0 +1,93 @@
+{
+  "entorno": "Lógica Angular en Node con HttpClient y FormData; transporte fetch de prueba, no selector visual de Chrome",
+  "asignaciones": {
+    "id": 1,
+    "tipo": "ASIGNACION",
+    "nombreArchivo": "asignaciones-e2e.csv",
+    "usuario": "Administrador del sistema",
+    "total": 3,
+    "aceptados": 1,
+    "rechazados": 2,
+    "errores": [
+      "Fila 3: la operación APF3-1811-01 está repetida en el archivo",
+      "Fila 4: la deuda no puede ser negativa"
+    ],
+    "creadoEn": "2026-11-18T13:46:01.327147100Z"
+  },
+  "pagos": {
+    "id": 2,
+    "tipo": "PAGO",
+    "nombreArchivo": "pagos-e2e.csv",
+    "usuario": "Administrador del sistema",
+    "total": 3,
+    "aceptados": 1,
+    "rechazados": 2,
+    "errores": [
+      "Fila 3: pago duplicado (misma operación, fecha, monto y referencia)",
+      "Fila 4: la operación APF3-INEXISTENTE no existe"
+    ],
+    "creadoEn": "2026-11-18T13:46:01.460971Z"
+  },
+  "historial": [
+    {
+      "id": 2,
+      "tipo": "PAGO",
+      "nombreArchivo": "pagos-e2e.csv",
+      "usuario": "Administrador del sistema",
+      "total": 3,
+      "aceptados": 1,
+      "rechazados": 2,
+      "errores": [
+        "Fila 3: pago duplicado (misma operación, fecha, monto y referencia)",
+        "Fila 4: la operación APF3-INEXISTENTE no existe"
+      ],
+      "creadoEn": "2026-11-18T13:46:01.460971Z"
+    },
+    {
+      "id": 1,
+      "tipo": "ASIGNACION",
+      "nombreArchivo": "asignaciones-e2e.csv",
+      "usuario": "Administrador del sistema",
+      "total": 3,
+      "aceptados": 1,
+      "rechazados": 2,
+      "errores": [
+        "Fila 3: la operación APF3-1811-01 está repetida en el archivo",
+        "Fila 4: la deuda no puede ser negativa"
+      ],
+      "creadoEn": "2026-11-18T13:46:01.327147Z"
+    }
+  ],
+  "peticiones": [
+    {
+      "metodo": "GET",
+      "url": "http://localhost:8080/api/admin/integracion/cargas",
+      "http": 200
+    },
+    {
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/admin/integracion/asignaciones",
+      "http": 409
+    },
+    {
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/admin/integracion/asignaciones",
+      "http": 200
+    },
+    {
+      "metodo": "GET",
+      "url": "http://localhost:8080/api/admin/integracion/cargas",
+      "http": 200
+    },
+    {
+      "metodo": "POST",
+      "url": "http://localhost:8080/api/admin/integracion/pagos",
+      "http": 200
+    },
+    {
+      "metodo": "GET",
+      "url": "http://localhost:8080/api/admin/integracion/cargas",
+      "http": 200
+    }
+  ]
+}

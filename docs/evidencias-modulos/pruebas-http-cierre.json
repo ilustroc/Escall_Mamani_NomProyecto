@@ -1,0 +1,110 @@
+[
+  {
+    "metodo": "POST",
+    "ruta": "/auth/login",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/auth/login",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/usuarios",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "PATCH",
+    "ruta": "/usuarios/7/estado",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/auth/login",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/auth/login",
+    "http": 401,
+    "esperado": 401
+  },
+  {
+    "metodo": "PATCH",
+    "ruta": "/usuarios/7/password",
+    "http": 400,
+    "esperado": 400
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/usuarios",
+    "http": 409,
+    "esperado": 409
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/usuarios",
+    "http": 201,
+    "esperado": 201
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/usuarios",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "PUT",
+    "ruta": "/usuarios/8",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/clientes?q=96781118",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/clientes/14",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/reportes/pagos?desde=2026-11-18&hasta=2026-11-18",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/admin/integracion/cargas",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "PATCH",
+    "ruta": "/usuarios/7/estado",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "PATCH",
+    "ruta": "/usuarios/8/estado",
+    "http": 200,
+    "esperado": 200
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/auth/login",
+    "http": 401,
+    "esperado": 401
+  }
+]

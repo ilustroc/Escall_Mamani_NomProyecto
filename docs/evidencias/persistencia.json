@@ -1,0 +1,17 @@
+{
+  "perfil": "mysql",
+  "motor": "MySQL 8.0.46",
+  "puerto_prueba": 3310,
+  "cliente_antes": {
+    "id": 13,
+    "documento": "96781117",
+    "direccion": "Dirección actualizada desde Angular"
+  },
+  "cliente_despues": {
+    "id": 13,
+    "documento": "96781117",
+    "direccion": "Dirección actualizada desde Angular"
+  },
+  "sql_despues_reinicio": "id\tdocumento\tnombres\tdireccion\r\n13\t96781117\tCliente Integración APF3\tDirección actualizada desde Angular\r\n",
+  "persistencia_verificada": true
+}

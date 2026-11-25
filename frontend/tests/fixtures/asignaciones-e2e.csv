@@ -1,0 +1,4 @@
+﻿documento;tipo_documento;nombres;telefono;email;direccion;numero_operacion;entidad;producto;cartera;cosecha;deuda;dias_mora;asesor
+96781118;DNI;Cliente Carga Angular 18;912345678;prueba18@example.com;Direccion sintetica;APF3-1811-01;Banco Prueba;Consumo;Cartera Prueba;2026-11;1000.00;30;asesor1
+96781118;DNI;Cliente Carga Angular 18;912345678;prueba18@example.com;Direccion sintetica;APF3-1811-01;Banco Prueba;Consumo;Cartera Prueba;2026-11;1000.00;30;asesor1
+96781119;DNI;Fila Rechazada;912345678;;;APF3-1811-02;Banco Prueba;Consumo;Cartera Prueba;2026-11;-10;30;asesor1

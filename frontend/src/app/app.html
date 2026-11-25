@@ -1,0 +1,26 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/clientes"><img src="logo-escall.png" alt="ESCALL Perú"><span>CRM de cobranzas</span></a>
+    <p class="nav-label">OPERACIÓN</p>
+    <nav aria-label="Navegación principal">
+      @if(auth.sesion()) {
+        <a routerLink="/clientes" routerLinkActive="active">Clientes y cobranzas</a>
+        @if(auth.sesion()!.usuario.rol !== 'ASESOR'){
+          <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+          <a routerLink="/reportes" routerLinkActive="active">Reportes</a>
+          <a routerLink="/usuarios" routerLinkActive="active">Administración de usuarios</a>
+        }
+        @if(auth.sesion()!.usuario.rol === 'ADMIN'){<a routerLink="/importaciones" routerLinkActive="active">Importación de archivos</a>}
+      }
+      <a routerLink="/conexion" routerLinkActive="active">Estado de conexión</a>
+    </nav>
+    <div class="sidebar-bottom"><strong>ESCALL PERÚ S.A.C.</strong><p>Gestión y seguimiento de cartera</p></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span>Plataforma de gestión de cobranzas</span>
+      @if(auth.sesion(); as s){<div><strong>{{s.usuario.nombre}}</strong><span class="role">{{s.usuario.rol}}</span><button class="quiet" (click)="salir()">Cerrar sesión</button></div>}
+      @else{<a routerLink="/login">Iniciar sesión</a>}
+    </header>
+    <main id="contenido"><router-outlet /></main>
+  </div>
+</div>
