@@ -53,42 +53,42 @@ import {
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            <span>+ Nuevo Registro</span>
+            <span>Nuevo Registro</span>
           </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
-          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500">Registros Filtrados</span>
-          <p class="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 mt-1">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle min-w-0">
+          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 truncate block">Registros Filtrados</span>
+          <p class="text-xl lg:text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 mt-1 truncate">
             {{ service.summary().totalRecords }}
           </p>
-          <span class="text-[11px] text-slate-400 mt-1 block">de {{ service.filteredRecords().length }} activos</span>
+          <span class="text-[11px] text-slate-400 mt-1 block truncate">de {{ service.filteredRecords().length }} activos</span>
         </div>
 
-        <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
-          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500">Monto Consolidado</span>
-          <p class="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 mt-1">
+        <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle min-w-0">
+          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 truncate block">Monto Consolidado</span>
+          <p class="text-xl lg:text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 mt-1 truncate">
             {{ service.summary().totalAmount | currencyPen }}
           </p>
-          <span class="text-[11px] text-emerald-600 font-medium mt-1 block">En soles (PEN)</span>
+          <span class="text-[11px] text-emerald-600 font-medium mt-1 block truncate">En soles (PEN)</span>
         </div>
 
-        <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
-          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500">Ticket Promedio</span>
-          <p class="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 mt-1">
+        <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle min-w-0">
+          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 truncate block">Ticket Promedio</span>
+          <p class="text-xl lg:text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 mt-1 truncate">
             {{ service.summary().avgAmount | currencyPen }}
           </p>
-          <span class="text-[11px] text-slate-400 mt-1 block">por operación</span>
+          <span class="text-[11px] text-slate-400 mt-1 block truncate">por operación</span>
         </div>
 
-        <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
-          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500">Efectividad / Cumplimiento</span>
-          <p class="text-2xl font-bold font-mono tracking-tight text-emerald-600 dark:text-emerald-400 mt-1">
+        <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle min-w-0">
+          <span class="text-[11px] font-medium uppercase tracking-wider text-slate-500 truncate block">Efectividad / Cumplimiento</span>
+          <p class="text-xl lg:text-2xl font-bold font-mono tracking-tight text-emerald-600 dark:text-emerald-400 mt-1 truncate">
             {{ service.summary().completionRate | number:'1.1-1' }}%
           </p>
-          <span class="text-[11px] text-slate-400 mt-1 block">registros completados</span>
+          <span class="text-[11px] text-slate-400 mt-1 block truncate">registros completados</span>
         </div>
       </div>
 
