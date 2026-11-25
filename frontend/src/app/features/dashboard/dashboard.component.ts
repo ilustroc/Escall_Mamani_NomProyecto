@@ -91,36 +91,36 @@ export interface PriorityAlert {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
 
         <div class="p-4 lg:p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle min-w-0">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span class="text-[11px] font-medium uppercase tracking-wider truncate">Cartera Total</span>
+            <span class="text-[11px] font-medium uppercase tracking-wider">Cartera Total</span>
             <span class="p-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </span>
           </div>
-          <div class="text-lg xl:text-xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 tabular-nums truncate">
+          <div class="text-base sm:text-lg xl:text-xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 tabular-nums whitespace-nowrap">
             {{ currentMetrics().totalPortfolio | currencyPen }}
           </div>
           <div class="mt-2.5 flex items-center justify-between text-[11px]">
-            <span class="text-slate-400 truncate">150 cuentas · 100 clientes</span>
+            <span class="text-slate-400">150 ctas · 100 clientes</span>
             <span class="text-emerald-600 font-semibold font-mono shrink-0">↑ +3.8%</span>
           </div>
         </div>
 
         <div class="p-4 lg:p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle min-w-0">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span class="text-[11px] font-medium uppercase tracking-wider truncate">Recupero</span>
+            <span class="text-[11px] font-medium uppercase tracking-wider">Recupero</span>
             <span class="p-1 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 shrink-0">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </span>
           </div>
-          <div class="text-lg xl:text-xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 tabular-nums truncate">
+          <div class="text-base sm:text-lg xl:text-xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 tabular-nums whitespace-nowrap">
             {{ currentMetrics().recoveredAmount | currencyPen }}
           </div>
           <div class="mt-2.5">
@@ -136,14 +136,14 @@ export interface PriorityAlert {
 
         <div class="p-4 lg:p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle min-w-0">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span class="text-[11px] font-medium uppercase tracking-wider truncate">Promesas</span>
+            <span class="text-[11px] font-medium uppercase tracking-wider">Promesas</span>
             <span class="p-1 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 shrink-0">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </span>
           </div>
-          <div class="text-lg xl:text-xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 tabular-nums truncate">
+          <div class="text-base sm:text-lg xl:text-xl font-bold font-mono tracking-tight text-slate-900 dark:text-slate-100 tabular-nums whitespace-nowrap">
             {{ currentMetrics().promisesAmount | currencyPen }}
           </div>
           <div class="mt-2.5 flex items-center justify-between text-[11px]">
@@ -154,14 +154,14 @@ export interface PriorityAlert {
 
         <div class="p-4 lg:p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle min-w-0">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span class="text-[11px] font-medium uppercase tracking-wider text-rose-600 dark:text-rose-400 truncate">Mora > 30d</span>
+            <span class="text-[11px] font-medium uppercase tracking-wider text-rose-600 dark:text-rose-400">Mora > 30d</span>
             <span class="p-1 rounded bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 shrink-0">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </span>
           </div>
-          <div class="text-lg xl:text-xl font-bold font-mono tracking-tight text-rose-600 dark:text-rose-400 tabular-nums truncate">
+          <div class="text-base sm:text-lg xl:text-xl font-bold font-mono tracking-tight text-rose-600 dark:text-rose-400 tabular-nums whitespace-nowrap">
             {{ currentMetrics().criticalDebtAmount | currencyPen }}
           </div>
           <div class="mt-2.5 flex items-center justify-between text-[11px]">
@@ -172,14 +172,14 @@ export interface PriorityAlert {
 
         <div class="p-4 lg:p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle min-w-0">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
-            <span class="text-[11px] font-medium uppercase tracking-wider truncate">Contacto</span>
+            <span class="text-[11px] font-medium uppercase tracking-wider">Contacto</span>
             <span class="p-1 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shrink-0">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
             </span>
           </div>
-          <div class="text-lg xl:text-xl font-bold font-mono tracking-tight text-indigo-600 dark:text-indigo-400 tabular-nums truncate">
+          <div class="text-base sm:text-lg xl:text-xl font-bold font-mono tracking-tight text-indigo-600 dark:text-indigo-400 tabular-nums whitespace-nowrap">
             {{ currentMetrics().contactRate }}%
           </div>
           <div class="mt-2.5 flex items-center justify-between text-[11px]">
