@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateChildFn, CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
-export const authGuard: CanActivateFn = (route, state) => {
+export const authGuard: CanActivateChildFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -18,5 +18,21 @@ export const authGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  return router.createUrlTree(['/clientes']);
+  return router.createUrlTree([homePathForRole(currentRole)]);
 };
+
+export const guestGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isAuthenticated()) {
+    authService.clearSession();
+    return true;
+  }
+
+  return router.createUrlTree([homePathForRole(authService.sesion()?.usuario.rol)]);
+};
+
+function homePathForRole(role?: string): string {
+  return role === 'ADMIN' || role === 'SUPERVISOR' ? '/dashboard' : '/clientes';
+}

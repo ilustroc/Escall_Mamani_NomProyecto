@@ -8,7 +8,7 @@
         "browser": "src/main.ts", "index": "src/index.html", "tsConfig": "tsconfig.app.json",
         "assets": [{"glob": "**/*", "input": "public"}], "styles": ["src/styles.css"], "outputPath": "dist/escall"
       }, "configurations": {
-        "production": {"outputHashing": "all", "budgets": [{"type": "initial", "maximumWarning": "750kB", "maximumError": "1MB"}]},
+        "production": {"optimization": {"scripts": true, "styles": {"minify": true, "inlineCritical": true}, "fonts": {"inline": false}}, "outputHashing": "all", "budgets": [{"type": "initial", "maximumWarning": "750kB", "maximumError": "1MB"}]},
         "development": {"optimization": false, "sourceMap": true}
       }, "defaultConfiguration": "production"},
       "serve": {"builder": "@angular/build:dev-server", "configurations": {
