@@ -28,7 +28,6 @@ export class LoginPage {
   );
   readonly isLoading = signal(false);
 
-  // Backward compatibility getters
   get form() {
     return this.loginForm;
   }
@@ -70,7 +69,6 @@ export class LoginPage {
       });
   }
 
-  // Backward-compatibility alias
   entrar(): void {
     this.submitLogin();
   }

@@ -39,7 +39,6 @@ export class ClientesPage {
     direccion: ['', Validators.maxLength(300)]
   });
 
-  // Backward compatibility getters
   get auth() { return this.authService; }
   get filas() { return this.clients; }
   get cargando() { return this.isLoading; }
@@ -103,7 +102,6 @@ export class ClientesPage {
       });
   }
 
-  // Backward-compatibility aliases
   buscar(): void { this.search(); }
   abrirAlta(): void { this.openCreateModal(); }
   crear(): void { this.createClient(); }

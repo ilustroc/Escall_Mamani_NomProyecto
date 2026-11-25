@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-/** Nivel 2 del árbol: resultado de la gestión. Depende de un nivel 1. */
 @Entity
 @Table(name = "tipificaciones_n2")
 @Getter
@@ -22,7 +21,6 @@ public class TipificacionN2 {
     @Column(nullable = false, length = 80)
     private String nombre;
 
-    /** Si es true, la gestión exige fecha y monto de compromiso (genera una promesa). */
     @Column(nullable = false)
     private boolean requiereCompromiso;
 

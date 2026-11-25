@@ -11,10 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * Dashboard (RF10 - RF12) y Reportes (RF13 - RF15). Solo supervisor y administrador.
- * Filtros por query string, ej: /api/dashboard?periodo=SEMANA&asesorId=4&cartera=Tarjetas
- */
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor

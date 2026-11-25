@@ -11,12 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * Security Context Provider that resolves the authenticated user and their scoped visibility:
- *  - ADMIN      -> all advisors
- *  - SUPERVISOR -> only advisors belonging to their team (RF14)
- *  - ASESOR     -> only self (individual portfolio)
- */
 @Component
 @RequiredArgsConstructor
 public class UsuarioActual {
@@ -49,9 +43,6 @@ public class UsuarioActual {
         return getVisibleAdvisorIds(u);
     }
 
-    /**
-     * Prevents empty list errors in SQL 'IN (:list)' clauses by supplying a fallback impossible ID.
-     */
     public static List<Long> nonEmptyList(List<Long> ids) {
         return ids.isEmpty() ? List.of(-1L) : ids;
     }

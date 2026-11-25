@@ -21,7 +21,6 @@ public class Telefono {
     @Column(nullable = false, length = 20)
     private String numero;
 
-    /** CELULAR, FIJO, REFERENCIA... */
     @Column(nullable = false, length = 20)
     private String tipo = "CELULAR";
 

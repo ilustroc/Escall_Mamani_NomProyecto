@@ -15,7 +15,6 @@ public interface AsignacionRepository extends JpaRepository<Asignacion, Long> {
     @EntityGraph(attributePaths = "asesor")
     List<Asignacion> findByCuentaIdInAndActivaTrue(Collection<Long> cuentaIds);
 
-    /** Cartera actual de un asesor, con cuenta y cliente cargados en una sola consulta. */
     @EntityGraph(attributePaths = {"cuenta", "cuenta.cliente"})
     List<Asignacion> findByAsesorIdAndActivaTrueOrderByCuentaDiasMoraDesc(Long asesorId);
 

@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-/** Módulo Login (RF01, RF02). */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor

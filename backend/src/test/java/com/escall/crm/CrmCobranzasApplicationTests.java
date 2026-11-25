@@ -24,10 +24,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Pruebas de integración (TDD) sobre el perfil demo (H2 en memoria con datos de ejemplo).
- * Cada prueba indica el requisito funcional que verifica.
- */
 @SpringBootTest
 @ActiveProfiles("demo")
 class CrmCobranzasApplicationTests {
@@ -69,7 +65,7 @@ class CrmCobranzasApplicationTests {
                 .andExpect(status().isForbidden());
         mvc.perform(get("/api/dashboard").param("periodo", "SEMANA").header("Authorization", bearer(supervisor)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.porAsesor.length()").value(2)); // solo su equipo (RF14)
+                .andExpect(jsonPath("$.porAsesor.length()").value(2));
     }
 
     @Test
@@ -98,7 +94,6 @@ class CrmCobranzasApplicationTests {
         Integer promesaN2 = JsonPath.<List<Integer>>read(getJson("/api/tipificaciones", asesor),
                 "$[*].resultados[?(@.nombre == 'Promesa de pago')].id").getFirst();
 
-        // RF08: sin fecha ni monto de compromiso se rechaza
         mvc.perform(post("/api/gestiones").header("Authorization", bearer(asesor)).contentType(MediaType.APPLICATION_JSON)
                         .content(gestion(cuentaId, promesaN2, null, null)))
                 .andExpect(status().isConflict())
@@ -111,7 +106,6 @@ class CrmCobranzasApplicationTests {
                 .andExpect(jsonPath("$.nivel1").value("Contacto directo"))
                 .andExpect(jsonPath("$.montoCompromiso").value(150.00));
 
-        // RF20 - RF21: carga de pagos con una fila válida, una duplicada y una inexistente
         String admin = login("admin", "Admin12345");
         String csv = "numero_operacion;fecha_pago;monto;referencia\n"
                 + operacion + ";" + hoy + ";150.00;VOUCHER-1\n"
@@ -124,7 +118,6 @@ class CrmCobranzasApplicationTests {
                 .andExpect(jsonPath("$.rechazados").value(2))
                 .andExpect(jsonPath("$.errores[0]").value("Fila 3: pago duplicado (misma operación, fecha, monto y referencia)"));
 
-        // El pago marcó como cumplida la promesa de esa cuenta
         String detalle = getJson("/api/clientes/" + clienteId, asesor);
         List<String> estados = JsonPath.read(detalle, "$.promesas[?(@.cuentaId == " + cuentaId + ")].estado");
         assertThat(estados).isNotEmpty().allMatch(e -> e.equals("CUMPLIDA"));
@@ -160,7 +153,6 @@ class CrmCobranzasApplicationTests {
         String admin = login("admin", "Admin12345");
         Map<String, Integer> ids = idsDeUsuarios(admin);
 
-        // Aunque pida rol ADMIN, el supervisor solo puede crear asesores de su equipo
         mvc.perform(post("/api/usuarios").header("Authorization", bearer(supervisor)).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"usuario\":\"nuevo.asesor\",\"nombre\":\"Nuevo Asesor\",\"email\":\"nuevo@escall.pe\","
                                 + "\"password\":\"Segura2026\",\"rol\":\"ADMIN\"}"))
@@ -172,7 +164,6 @@ class CrmCobranzasApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON).content("{\"activo\":false}"))
                 .andExpect(status().isNotFound());
 
-        // RF23: las acciones quedan en la auditoría
         mvc.perform(get("/api/admin/auditoria").header("Authorization", bearer(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.contenido[?(@.accion == 'CREAR' && @.usuario == 'sgarcia')]").isNotEmpty());
@@ -187,12 +178,10 @@ class CrmCobranzasApplicationTests {
         mvc.perform(delete("/api/admin/tipificaciones/n2/" + n2Id).header("Authorization", bearer(admin)))
                 .andExpect(status().isNoContent());
 
-        // Sigue en el árbol del administrador, pero marcada como inactiva (no se pierde el historial)
         List<Boolean> activa = JsonPath.read(getJson("/api/admin/tipificaciones", admin),
                 "$[*].resultados[?(@.id == " + n2Id + ")].activo");
         assertThat(activa).containsExactly(false);
 
-        // El asesor ya no la recibe al tipificar una gestión
         String asesor = login("asesor1", CLAVE_DEMO);
         List<Integer> visibles = JsonPath.read(getJson("/api/tipificaciones", asesor),
                 "$[*].resultados[?(@.id == " + n2Id + ")].id");
@@ -206,7 +195,6 @@ class CrmCobranzasApplicationTests {
         String asesor3 = login("asesor3", CLAVE_DEMO);
         String nuevo = "{\"documento\":\"70707070\",\"nombres\":\"Cliente CRUD\",\"email\":\"crud@escall.pe\",\"direccion\":\"Av. Prueba 123\"}";
 
-        // Crear: solo el administrador
         mvc.perform(post("/api/clientes").header("Authorization", bearer(asesor1)).contentType(MediaType.APPLICATION_JSON).content(nuevo))
                 .andExpect(status().isForbidden());
         String creado = mvc.perform(post("/api/clientes").header("Authorization", bearer(admin)).contentType(MediaType.APPLICATION_JSON).content(nuevo))
@@ -218,7 +206,6 @@ class CrmCobranzasApplicationTests {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.mensaje").value("Ya existe un cliente con ese documento"));
 
-        // Actualizar: un asesor que no tiene cartera con este cliente no lo ve (404); el administrador sí
         String cambio = "{\"nombres\":\"Cliente CRUD Editado\",\"email\":\"crud@escall.pe\",\"direccion\":\"Av. Nueva 456\"}";
         mvc.perform(put("/api/clientes/" + id).header("Authorization", bearer(asesor3)).contentType(MediaType.APPLICATION_JSON).content(cambio))
                 .andExpect(status().isNotFound());
@@ -226,19 +213,16 @@ class CrmCobranzasApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nombres").value("Cliente CRUD Editado"));
 
-        // Eliminar: no se permite si el cliente tiene cuentas (cliente de la cartera de asesor1)
         Integer conCuentas = JsonPath.read(getJson("/api/cartera", asesor1), "$[0].clienteId");
         mvc.perform(delete("/api/clientes/" + conCuentas).header("Authorization", bearer(admin)))
                 .andExpect(status().isConflict());
 
-        // El asesor sí puede corregir el contacto de un cliente de su cartera (conserva el nombre)
         String nombres = JsonPath.read(getJson("/api/clientes/" + conCuentas, asesor1), "$.nombres");
         mvc.perform(put("/api/clientes/" + conCuentas).header("Authorization", bearer(asesor1)).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"nombres\":\"" + nombres + "\",\"email\":null,\"direccion\":\"Dirección actualizada\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.direccion").value("Dirección actualizada"));
 
-        // Eliminar cliente sin cuentas: 204 y luego ya no existe
         mvc.perform(delete("/api/clientes/" + id).header("Authorization", bearer(admin))).andExpect(status().isNoContent());
         mvc.perform(get("/api/clientes/" + id).header("Authorization", bearer(admin))).andExpect(status().isNotFound());
     }
@@ -270,8 +254,6 @@ class CrmCobranzasApplicationTests {
         mvc.perform(get("/api/clientes").param("q", "Pérez").header("Authorization", "Bearer token-invalido"))
                 .andExpect(status().isUnauthorized());
     }
-
-    // ------------------------------------------------------------------ utilidades
 
     private String login(String usuario, String password) throws Exception {
         String json = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)

@@ -23,7 +23,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
         </p>
       </div>
 
-      <!-- Métricas del Equipo -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div class="p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
           <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Promesas Acordadas en Mes</p>
@@ -44,12 +43,11 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
         </div>
       </div>
 
-      <!-- Desempeño por Asesor -->
       <div class="border border-slate-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-subtle overflow-hidden p-6">
         <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4">
           Ranking de Productividad por Asesor (Noviembre 2026)
         </h3>
-        
+
         <div class="space-y-4">
           <div class="space-y-1.5">
             <div class="flex items-center justify-between text-xs">

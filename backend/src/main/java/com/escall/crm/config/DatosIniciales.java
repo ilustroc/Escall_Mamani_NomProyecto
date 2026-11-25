@@ -19,12 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Se ejecuta al arrancar. Solo crea lo que falta (nunca duplica ni borra):
- *  1. El usuario administrador inicial (si no hay usuarios).
- *  2. El árbol de tipificaciones base (si está vacío).
- *  3. Datos de demostración (si app.datos-demo=true y no hay clientes).
- */
 @Component
 @RequiredArgsConstructor
 public class DatosIniciales implements ApplicationRunner {
@@ -69,8 +63,6 @@ public class DatosIniciales implements ApplicationRunner {
         }
     }
 
-    // ------------------------------------------------------------------ Tipificaciones
-
     private void crearArbolTipificaciones() {
         TipificacionN1 directo = n1("Contacto directo", true, 1);
         n2(directo, "Promesa de pago", true, 1);
@@ -113,8 +105,6 @@ public class DatosIniciales implements ApplicationRunner {
         n1.getResultados().add(n2Repo.save(t));
     }
 
-    // ------------------------------------------------------------------ Demo
-
     private void crearDatosDemo() {
         Usuario supA = usuario("sgarcia", "Sandra García", Rol.SUPERVISOR, null, CLAVE_DEMO);
         Usuario supB = usuario("mrojas", "Miguel Rojas", Rol.SUPERVISOR, null, CLAVE_DEMO);
@@ -136,7 +126,7 @@ public class DatosIniciales implements ApplicationRunner {
                 {"Caja Norte", "Crédito vehicular", "Caja Norte - Vehicular"}};
         String[] cosechas = {"2026-07", "2026-08", "2026-09"};
 
-        Random azar = new Random(42); // semilla fija: siempre los mismos datos de ejemplo
+        Random azar = new Random(42);
         LocalDate hoy = reloj.hoy();
         List<Cuenta> todas = new ArrayList<>();
         int operacion = 100200;
@@ -172,7 +162,6 @@ public class DatosIniciales implements ApplicationRunner {
             }
         }
 
-        // Gestiones de los últimos días para que el dashboard tenga información
         List<TipificacionN1> arbol = n1Repo.findAllByOrderByOrdenAscNombreAsc();
         for (int d = 9; d >= 0; d--) {
             for (Cuenta cu : todas) {
@@ -198,7 +187,7 @@ public class DatosIniciales implements ApplicationRunner {
                     p.setAsesor(asesor);
                     p.setFechaCompromiso(hoy.minusDays(d).plusDays(3 + azar.nextInt(5)));
                     p.setMonto(cu.getDeudaTotal().multiply(new BigDecimal("0.2")).setScale(2, RoundingMode.HALF_UP));
-                    // Algunas promesas antiguas ya se cumplieron con un pago
+
                     if (d > 4 && azar.nextBoolean()) {
                         p.setEstado(EstadoPromesa.CUMPLIDA);
                         Pago pago = new Pago();

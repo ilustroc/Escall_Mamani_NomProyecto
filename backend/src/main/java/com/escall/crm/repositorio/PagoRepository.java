@@ -16,17 +16,12 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     @Query("select p from Pago p join fetch p.cuenta where p.cuenta.cliente.id = :clienteId order by p.fechaPago desc")
     List<Pago> delCliente(@Param("clienteId") Long clienteId);
 
-    /** Total pagado por cuenta: filas [cuentaId, suma]. */
     @Query("select p.cuenta.id, sum(p.monto) from Pago p where p.cuenta.id in :cuentas group by p.cuenta.id")
     List<Object[]> totalesPorCuenta(@Param("cuentas") Collection<Long> cuentas);
 
     boolean existsByCuentaIdAndFechaPagoAndMontoAndReferencia(Long cuentaId, LocalDate fecha, BigDecimal monto,
                                                               String referencia);
 
-    /**
-     * Pagos del periodo junto con el asesor que tiene asignada la cuenta (puede ser null).
-     * Devuelve filas [Pago, Usuario]. Si "todos" es true no se filtra por asesor (vista del administrador).
-     */
     @Query("""
             select p, a.asesor from Pago p
             join fetch p.cuenta c join fetch c.cliente

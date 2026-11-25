@@ -7,10 +7,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-/**
- * Operational Clock and Timezone Provider (Lima by default).
- * Provides consistent operational date and time independent of server host clock.
- */
 @Component
 public class Reloj {
 
@@ -32,12 +28,10 @@ public class Reloj {
         return zoneId;
     }
 
-    /** Compatibility alias */
     public LocalDate hoy() {
         return today();
     }
 
-    /** Compatibility alias */
     public LocalDateTime ahora() {
         return now();
     }

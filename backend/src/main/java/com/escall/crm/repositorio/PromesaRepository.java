@@ -20,13 +20,11 @@ public interface PromesaRepository extends JpaRepository<Promesa, Long> {
             where p.cuenta.cliente.id = :clienteId order by p.fechaCompromiso desc""")
     List<Promesa> delCliente(@Param("clienteId") Long clienteId);
 
-    /** Promesas pendientes del asesor (para su agenda de seguimiento). */
     @Query("""
             select p from Promesa p join fetch p.cuenta c join fetch c.cliente join fetch p.gestion
             where p.asesor.id = :asesorId and p.estado = :estado order by p.fechaCompromiso""")
     List<Promesa> delAsesorPorEstado(@Param("asesorId") Long asesorId, @Param("estado") EstadoPromesa estado);
 
-    /** Promesas generadas en un periodo (fecha de la gestión que las originó). */
     @Query("""
             select p from Promesa p
             join fetch p.cuenta c join fetch c.cliente join fetch p.asesor join fetch p.gestion g
@@ -39,7 +37,6 @@ public interface PromesaRepository extends JpaRepository<Promesa, Long> {
                              @Param("asesores") Collection<Long> asesores, @Param("cartera") String cartera,
                              @Param("cosecha") String cosecha, Pageable limite);
 
-    /** Un pago cumple las promesas pendientes de la cuenta hechas hasta la fecha del pago. */
     @Modifying(flushAutomatically = true)
     @Query("""
             update Promesa p set p.estado = com.escall.crm.modelo.EstadoPromesa.CUMPLIDA

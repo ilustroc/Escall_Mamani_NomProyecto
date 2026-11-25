@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Adapter for backward compatibility delegating to standardized {@link CsvReader}.
- */
 public final class LectorCsv {
 
     public static final int MAX_FILAS = CsvReader.MAX_ROWS;

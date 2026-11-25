@@ -40,7 +40,6 @@ public class Cliente {
     @OrderBy("id")
     private List<Telefono> telefonos = new ArrayList<>();
 
-    /** Agrega el teléfono solo si el cliente aún no lo tiene. */
     public void agregarTelefono(String numero, String tipo) {
         if (numero == null || numero.isBlank()) {
             return;

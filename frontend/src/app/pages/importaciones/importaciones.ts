@@ -27,7 +27,6 @@ export class ImportacionesPage {
   readonly batchHistory = signal<Carga[]>([]);
   readonly selectedDetail = signal<Carga | null>(null);
 
-  // Backward compatibility getters
   get tipo() { return this.batchType; }
   get archivo() { return this.selectedFile; }
   get cargando() { return this.isProcessing; }
@@ -130,7 +129,6 @@ export class ImportacionesPage {
     downloadCsv(`plantilla-${this.batchType()}.csv`, [columns]);
   }
 
-  // Backward-compatibility aliases
   cambiarTipo(t: string): void { this.changeBatchType(t); }
   limpiar(): void { this.clearSelection(); }
   seleccionar(e: Event): void { this.onFileSelected(e); }

@@ -18,7 +18,6 @@ export class DashboardPage {
   readonly isLoading = signal(false);
   readonly errorMessage = signal('');
 
-  // Backward compatibility getters
   get datos() { return this.dashboardData; }
   get periodo() { return this.selectedPeriod; }
   get cargando() { return this.isLoading; }
@@ -49,7 +48,6 @@ export class DashboardPage {
     this.loadData();
   }
 
-  // Backward-compatibility aliases
   cargar(): void { this.loadData(); }
   cambiar(p: string): void { this.changePeriod(p); }
 }

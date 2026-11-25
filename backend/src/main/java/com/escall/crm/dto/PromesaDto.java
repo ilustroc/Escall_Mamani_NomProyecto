@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/** estado: PENDIENTE, CUMPLIDA o VENCIDA (pendiente cuya fecha ya pasó). */
 public record PromesaDto(Long id, Long cuentaId, String numeroOperacion, String cartera, LocalDate fechaCompromiso,
                          BigDecimal monto, String estado, String asesorNombre, LocalDateTime fechaGestion,
                          Long clienteId, String clienteDocumento, String clienteNombres) {

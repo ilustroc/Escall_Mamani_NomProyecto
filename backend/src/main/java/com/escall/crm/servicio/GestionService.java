@@ -18,14 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * Management and Customer Follow-up Service (RF07 - RF09).
- */
 @Service
 @RequiredArgsConstructor
 public class GestionService {
 
-    /** Maximum term for a payment promise, in days. */
     static final int DIAS_MAXIMOS_COMPROMISO = 30;
 
     private final GestionRepository gestiones;
@@ -35,21 +31,16 @@ public class GestionService {
     private final UsuarioActual usuarioActual;
     private final Reloj reloj;
 
-    /**
-     * Record a debt management contact and optional payment promise.
-     */
     @Transactional
     public GestionDto recordManagement(GestionRequest req) {
         Usuario advisor = usuarioActual.obtener();
         Cuenta account = cuentas.findById(req.cuentaId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cuenta no encontrada"));
 
-        // Only accounts assigned to the current advisor can be managed
         Asignacion assignment = asignaciones.findByCuentaIdAndActivaTrue(account.getId())
                 .filter(a -> a.getAsesor().getId().equals(advisor.getId()))
                 .orElseThrow(() -> new ReglaNegocioException("Esta cuenta no está asignada a tu cartera"));
 
-        // RF09: Level 2 typology automatically defines its parent Level 1
         TipificacionN2 n2 = tipificaciones.findWithN1ById(req.tipificacionN2Id())
                 .filter(t -> t.isActivo() && t.getN1().isActivo())
                 .orElseThrow(() -> new ReglaNegocioException("La tipificación elegida no existe o está inactiva"));
@@ -69,12 +60,10 @@ public class GestionService {
         g.setTipificacionN2(n2);
         g.setObservacion(req.observacion().trim());
 
-        // RF08: If typology requires commitment, create payment promise
         if (n2.isRequiereCompromiso()) {
             g.setPromesa(createPromise(req, g, account, advisor));
         }
 
-        // If phone number used is new, register it in the client contact record
         account.getCliente().agregarTelefono(g.getTelefono(), "GESTION");
 
         return GestionDto.desde(gestiones.save(g), false);

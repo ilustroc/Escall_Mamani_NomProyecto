@@ -12,7 +12,6 @@ import java.util.List;
 
 public interface GestionRepository extends JpaRepository<Gestion, Long> {
 
-    /** Historial de gestiones de todas las cuentas de un cliente. */
     @Query("""
             select g from Gestion g
             join fetch g.cuenta join fetch g.asesor join fetch g.tipificacionN1 join fetch g.tipificacionN2
@@ -21,7 +20,6 @@ public interface GestionRepository extends JpaRepository<Gestion, Long> {
             order by g.fechaHora desc""")
     List<Gestion> historialDelCliente(@Param("clienteId") Long clienteId);
 
-    /** Gestiones de un periodo para dashboard y reportes (cartera y cosecha son opcionales). */
     @Query("""
             select g from Gestion g
             join fetch g.cuenta c join fetch c.cliente join fetch g.asesor

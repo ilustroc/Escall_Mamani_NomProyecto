@@ -7,7 +7,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/** Obligación o producto financiero del cliente que se gestiona en cobranza. */
 @Entity
 @Table(name = "cuentas")
 @Getter
@@ -25,7 +24,6 @@ public class Cuenta {
     @Column(nullable = false, unique = true, length = 30)
     private String numeroOperacion;
 
-    /** Empresa dueña de la deuda (banco, financiera...). */
     @Column(nullable = false, length = 100)
     private String entidad;
 
@@ -35,7 +33,6 @@ public class Cuenta {
     @Column(nullable = false, length = 100)
     private String cartera;
 
-    /** Periodo en que la cuenta ingresó a cobranza, ej: "2026-09". */
     @Column(nullable = false, length = 20)
     private String cosecha;
 

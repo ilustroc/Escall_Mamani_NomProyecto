@@ -4,7 +4,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/** Alta de cliente (CRUD - Crear). El documento identifica al cliente y no puede repetirse. */
 public record ClienteRequest(
         @Size(max = 10) String tipoDocumento,
         @NotBlank(message = "El documento es obligatorio") @Size(max = 20) String documento,

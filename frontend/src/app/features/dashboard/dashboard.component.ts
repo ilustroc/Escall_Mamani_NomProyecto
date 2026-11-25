@@ -10,8 +10,7 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
   imports: [CommonModule, RouterModule, CurrencyPenPipe],
   template: `
     <div class="space-y-7 max-w-7xl mx-auto pb-8">
-      
-      <!-- Header de la pantalla -->
+
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div class="flex items-center gap-2">
@@ -37,10 +36,8 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
         </div>
       </div>
 
-      <!-- 1. Cuadrícula de 4 Tarjetas KPI estilo Linear / Stripe -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        <!-- KPI 1: Cartera Total -->
+
         <div class="p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle hover:border-slate-300 dark:hover:border-slate-700 transition-all">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span class="text-xs font-medium uppercase tracking-wider">Cartera Asignada</span>
@@ -63,7 +60,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
           </div>
         </div>
 
-        <!-- KPI 2: Tasa de Recuperación -->
         <div class="p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle hover:border-slate-300 dark:hover:border-slate-700 transition-all">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span class="text-xs font-medium uppercase tracking-wider">Tasa Recuperación</span>
@@ -79,13 +75,12 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
             </span>
             <span class="text-xs text-slate-400 font-mono">Meta: {{ metrics.recoveryTarget }}%</span>
           </div>
-          <!-- Barra de progreso -->
+
           <div class="mt-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
             <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" [style.width.%]="(metrics.recoveryRate / metrics.recoveryTarget) * 100"></div>
           </div>
         </div>
 
-        <!-- KPI 3: Promesas de Pago Hoy -->
         <div class="p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle hover:border-slate-300 dark:hover:border-slate-700 transition-all">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span class="text-xs font-medium uppercase tracking-wider">Promesas Hoy</span>
@@ -106,7 +101,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
           </div>
         </div>
 
-        <!-- KPI 4: Mora Crítica > 30 días -->
         <div class="p-5 rounded-xl border border-rose-200/80 dark:border-rose-900/40 bg-white dark:bg-slate-900 shadow-subtle hover:border-rose-300 transition-all">
           <div class="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span class="text-xs font-medium uppercase tracking-wider text-rose-600 dark:text-rose-400">Mora > 30 Días</span>
@@ -128,10 +122,8 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
 
       </div>
 
-      <!-- 2. Gráfico de Recuperación Mensual vs. Meta y Alertas Prioritarias -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Gráfico SVG Interactivo (2 columnas) -->
         <div class="lg:col-span-2 p-6 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-4">
@@ -142,7 +134,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
                 <p class="text-xs text-slate-500 mt-0.5">Proyección de cobro en soles (PEN) al cierre del día 25</p>
               </div>
 
-              <!-- Leyenda -->
               <div class="flex items-center gap-4 text-xs font-mono">
                 <div class="flex items-center gap-1.5">
                   <span class="w-3 h-0.5 bg-indigo-600 rounded"></span>
@@ -155,7 +146,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
               </div>
             </div>
 
-            <!-- Gráfico SVG fluido -->
             <div class="w-full h-64 mt-4">
               <svg viewBox="0 0 600 240" class="w-full h-full overflow-visible">
                 <defs>
@@ -165,7 +155,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
                   </linearGradient>
                 </defs>
 
-                <!-- Líneas horizontales de referencia -->
                 <line x1="40" y1="20" x2="580" y2="20" stroke="currentColor" stroke-dasharray="3 3" class="text-slate-100 dark:text-slate-800" stroke-width="1" />
                 <text x="35" y="24" text-anchor="end" class="text-[10px] font-mono fill-slate-400">1.2M</text>
 
@@ -178,7 +167,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
                 <line x1="40" y1="200" x2="580" y2="200" stroke="currentColor" class="text-slate-200 dark:text-slate-700" stroke-width="1" />
                 <text x="35" y="204" text-anchor="end" class="text-[10px] font-mono fill-slate-400">0</text>
 
-                <!-- Línea de Meta (Gris discontinuo) -->
                 <polyline
                   fill="none"
                   stroke="#94A3B8"
@@ -187,13 +175,11 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
                   points="50,195 150,182 250,158 350,120 450,68 560,25"
                 />
 
-                <!-- Área con gradiente de recuperación real -->
                 <polygon
                   fill="url(#areaGrad)"
                   points="50,200 50,192 150,180 250,155 350,115 450,72 560,35 560,200"
                 />
 
-                <!-- Línea de recuperación real (Indigo) -->
                 <polyline
                   fill="none"
                   stroke="#4F46E5"
@@ -201,7 +187,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
                   points="50,192 150,180 250,155 350,115 450,72 560,35"
                 />
 
-                <!-- Puntos interactivos -->
                 <circle cx="50" cy="192" r="4" class="fill-white dark:fill-slate-900 stroke-indigo-600 stroke-2" />
                 <circle cx="150" cy="180" r="4" class="fill-white dark:fill-slate-900 stroke-indigo-600 stroke-2" />
                 <circle cx="250" cy="155" r="4" class="fill-white dark:fill-slate-900 stroke-indigo-600 stroke-2" />
@@ -209,7 +194,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
                 <circle cx="450" cy="72" r="4" class="fill-white dark:fill-slate-900 stroke-indigo-600 stroke-2" />
                 <circle cx="560" cy="35" r="5" class="fill-indigo-600 stroke-white stroke-2 shadow-lg" />
 
-                <!-- Ejes X -->
                 <text x="50" y="222" text-anchor="middle" class="text-[11px] font-mono fill-slate-400">01 Nov</text>
                 <text x="150" y="222" text-anchor="middle" class="text-[11px] font-mono fill-slate-400">05 Nov</text>
                 <text x="250" y="222" text-anchor="middle" class="text-[11px] font-mono fill-slate-400">10 Nov</text>
@@ -226,7 +210,6 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
           </div>
         </div>
 
-        <!-- 3. Alertas Prioritarias de Gestión (1 columna) -->
         <div class="p-6 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle flex flex-col">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -237,7 +220,7 @@ import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
           </div>
 
           <div class="space-y-3 flex-1 overflow-y-auto">
-            <div *ngFor="let alert of alerts" 
+            <div *ngFor="let alert of alerts"
                  class="p-3.5 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between">
               <div>
                 <div class="flex items-center justify-between gap-2 mb-1.5">

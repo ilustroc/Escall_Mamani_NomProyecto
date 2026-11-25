@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/** Compromiso de pago que nace de una gestión. */
 @Entity
 @Table(name = "promesas")
 @Getter

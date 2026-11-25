@@ -5,9 +5,6 @@ import { API_URL } from './api.config';
 import { Usuario } from './models';
 import { Carga, FilaReporte, FiltrosReporte, OpcionesFiltro, TipoCarga, TipoReporte, UsuarioEntrada } from './operaciones.models';
 
-/**
- * Operations and Administrative Integrations HTTP Service.
- */
 @Injectable({
   providedIn: 'root'
 })
@@ -60,7 +57,6 @@ export class OperacionesService {
     return this.http.get<Carga[]>(`${API_URL}/admin/integracion/cargas`);
   }
 
-  // Compatibility aliases
   reporte(tipo: TipoReporte, filtros: FiltrosReporte) { return this.getReport(tipo, filtros); }
   filtros() { return this.getFilterOptions(); }
   usuarios() { return this.getUsers(); }

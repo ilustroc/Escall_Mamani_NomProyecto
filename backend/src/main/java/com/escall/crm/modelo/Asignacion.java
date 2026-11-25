@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
-/** Relaciona una cuenta con el asesor que la gestiona en un periodo. */
 @Entity
 @Table(name = "asignaciones")
 @Getter

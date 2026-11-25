@@ -14,14 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Report Generation Service for managements, payments, and promises (RF13 - RF15), role-scoped.
- */
 @Service
 @RequiredArgsConstructor
 public class ReporteService {
 
-    /** Maximum row limit per report to avoid browser overload. */
     private static final PageRequest REPORT_ROW_LIMIT = PageRequest.of(0, 5_000);
 
     private final GestionRepository gestiones;

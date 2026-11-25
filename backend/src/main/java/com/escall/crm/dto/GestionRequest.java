@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/** Datos de una gestión (RF07). Fecha y monto de compromiso solo si la tipificación lo exige (RF08). */
 public record GestionRequest(
         @NotNull(message = "Elige la cuenta gestionada") Long cuentaId,
         LocalDateTime fechaHora,

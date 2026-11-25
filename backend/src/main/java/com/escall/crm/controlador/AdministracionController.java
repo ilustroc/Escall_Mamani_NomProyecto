@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-/** Funciones exclusivas del administrador: tipificaciones (RF22), Integración de Datos (RF18 - RF21) y auditoría (RF23). */
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -23,8 +22,6 @@ public class AdministracionController {
     private final TipificacionService tipificaciones;
     private final IntegracionService integracion;
     private final AuditoriaService auditoria;
-
-    // ------------------------------------------------------------ Árbol de tipificaciones
 
     @GetMapping("/tipificaciones")
     public List<TipificacionDto> arbolCompleto() {
@@ -53,7 +50,6 @@ public class AdministracionController {
         return tipificaciones.guardarN2(id, req);
     }
 
-    // Se desactiva en lugar de borrarse: el historial de gestiones conserva la tipificación original
     @DeleteMapping("/tipificaciones/n1/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void desactivarN1(@PathVariable Long id) {
@@ -65,8 +61,6 @@ public class AdministracionController {
     public void desactivarN2(@PathVariable Long id) {
         tipificaciones.desactivarN2(id);
     }
-
-    // ------------------------------------------------------------ Integración de Datos
 
     @PostMapping(value = "/integracion/asignaciones", consumes = "multipart/form-data")
     public CargaDto cargarAsignaciones(@RequestParam("archivo") MultipartFile archivo) {
@@ -82,8 +76,6 @@ public class AdministracionController {
     public List<CargaDto> historialDeCargas() {
         return integracion.historial();
     }
-
-    // ------------------------------------------------------------ Auditoría
 
     @GetMapping("/auditoria")
     public Pagina<AuditoriaDto> auditoria(@RequestParam(defaultValue = "0") int pagina,

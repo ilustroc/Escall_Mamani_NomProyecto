@@ -10,9 +10,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-/**
- * JWT Token Generation and Signing Service for API Authorization.
- */
 @Service
 public class JwtService {
 

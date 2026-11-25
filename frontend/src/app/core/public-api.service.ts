@@ -13,7 +13,6 @@ export class PublicApiService {
     return this.http.get(`${API_URL}/publico/saludo`, { responseType: 'text' });
   }
 
-  // Backward-compatibility alias
   obtenerSaludo(): Observable<string> {
     return this.getGreeting();
   }

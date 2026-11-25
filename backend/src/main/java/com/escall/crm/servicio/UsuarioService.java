@@ -16,11 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * User and Team Access Management Service.
- *  - RF16: SUPERVISOR manages advisors on their assigned team.
- *  - RF17: ADMIN manages supervisors and advisors system-wide.
- */
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
@@ -162,8 +157,6 @@ public class UsuarioService {
     public void cambiarPassword(Long id, String password) {
         updatePassword(id, password);
     }
-
-    // ---------------------------------------------------------------- Rules and helpers
 
     private Usuario findManageableUser(Usuario me, Long id) {
         Usuario u = usuarios.findById(id).orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));

@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/** Pago de una cuenta, cargado desde Integración de Datos. */
 @Entity
 @Table(name = "pagos")
 @Getter
@@ -29,7 +28,6 @@ public class Pago {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal monto;
 
-    /** Número de voucher u operación bancaria ("" si no se informa). */
     @Column(nullable = false, length = 60)
     private String referencia = "";
 

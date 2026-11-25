@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import java.time.Instant;
 
-/** Bitácora de acciones críticas: quién hizo qué y cuándo (RF23). */
 @Entity
 @Table(name = "auditoria")
 @Getter

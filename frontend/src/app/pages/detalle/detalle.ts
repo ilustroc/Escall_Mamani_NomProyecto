@@ -48,7 +48,6 @@ export class DetallePage {
     montoCompromiso: [null as number | null]
   });
 
-  // Backward-compatibility getters
   get auth() { return this.authService; }
   get id() { return this.clientId; }
   get cliente() { return this.clientDetail; }
@@ -209,7 +208,6 @@ export class DetallePage {
       });
   }
 
-  // Backward-compatibility aliases
   cargar(): void { this.loadClientDetails(); }
   editar(): void { this.openEditModal(); }
   guardar(): void { this.saveContactDetails(); }

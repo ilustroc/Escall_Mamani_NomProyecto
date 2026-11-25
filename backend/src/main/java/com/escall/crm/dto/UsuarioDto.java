@@ -5,7 +5,6 @@ import com.escall.crm.modelo.Usuario;
 
 import java.time.Instant;
 
-/** Datos públicos de un usuario (nunca se expone el hash de la contraseña). */
 public record UsuarioDto(Long id, String usuario, String nombre, String email, Rol rol,
                          Long supervisorId, String supervisorNombre, boolean activo, Instant creadoEn) {
 

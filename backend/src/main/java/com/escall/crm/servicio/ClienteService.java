@@ -19,9 +19,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Client Management Service (RF03 - RF06) and advisor portfolio operations.
- */
 @Service
 @RequiredArgsConstructor
 public class ClienteService {
@@ -38,9 +35,6 @@ public class ClienteService {
     private final Reloj reloj;
     private final AuditoriaService auditoria;
 
-    /**
-     * RF03: Search clients by document number, operation ID, or client name.
-     */
     @Transactional(readOnly = true)
     public List<ClienteResumenDto> search(String query) {
         String cleanQuery = TextUtils.clean(query);
@@ -69,9 +63,6 @@ public class ClienteService {
         return search(texto);
     }
 
-    /**
-     * RF04 - RF06: Retrieve complete client details, contact information, accounts, and history.
-     */
     @Transactional(readOnly = true)
     public ClienteDetalleDto getDetail(Long clientId) {
         Cliente c = clientes.findById(clientId)
@@ -105,9 +96,6 @@ public class ClienteService {
         return getDetail(clienteId);
     }
 
-    /**
-     * Advisor portfolio: Assigned accounts ordered by days past due.
-     */
     @Transactional(readOnly = true)
     public List<CuentaDto> getPortfolio() {
         Usuario advisor = usuarioActual.obtener();
@@ -125,9 +113,6 @@ public class ClienteService {
         return getPortfolio();
     }
 
-    /**
-     * Advisor schedule: Pending and overdue payment promises for daily follow-up.
-     */
     @Transactional(readOnly = true)
     public List<PromesaDto> getSchedule() {
         Usuario advisor = usuarioActual.obtener();
@@ -140,9 +125,6 @@ public class ClienteService {
         return getSchedule();
     }
 
-    /**
-     * CRUD - Create client (Admin only).
-     */
     @Transactional
     public ClienteDetalleDto create(ClienteRequest req) {
         String document = req.documento().trim();
@@ -165,9 +147,6 @@ public class ClienteService {
         return create(req);
     }
 
-    /**
-     * CRUD - Update client contact details.
-     */
     @Transactional
     public ClienteDetalleDto update(Long id, ClienteEdicionRequest req) {
         Cliente c = clientes.findById(id)
@@ -185,9 +164,6 @@ public class ClienteService {
         return update(id, req);
     }
 
-    /**
-     * CRUD - Delete client (Admin only, allowed only if client has no associated accounts).
-     */
     @Transactional
     public void delete(Long id) {
         Cliente c = clientes.findById(id)
@@ -204,8 +180,6 @@ public class ClienteService {
     public void eliminar(Long id) {
         delete(id);
     }
-
-    // ---------------------------------------------------------------- Helper methods
 
     private void verifyAccess(Long clientId) {
         Usuario currentUser = usuarioActual.obtener();

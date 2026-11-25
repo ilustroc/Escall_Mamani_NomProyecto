@@ -14,7 +14,6 @@ export class ConexionPage {
   readonly errorMessage = signal('');
   readonly isLoading = signal(false);
 
-  // Backward compatibility getters
   get mensaje() {
     return this.statusMessage;
   }
@@ -43,7 +42,6 @@ export class ConexionPage {
       });
   }
 
-  // Backward-compatibility alias
   comprobar(): void {
     this.checkConnection();
   }

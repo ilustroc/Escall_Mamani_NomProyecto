@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Administración de usuarios (RF16, RF17). El alcance de cada rol se controla en UsuarioService. */
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor

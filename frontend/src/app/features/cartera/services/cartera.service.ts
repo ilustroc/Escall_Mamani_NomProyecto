@@ -6,7 +6,7 @@ import { MOCK_DEBTORS, MOCK_KPIS } from '../../../mocks/deudores.mock';
   providedIn: 'root'
 })
 export class CarteraService {
-  // Estado base con signals
+
   private debtorsList = signal<Debtor[]>(MOCK_DEBTORS);
   searchTerm = signal<string>('');
   selectedSegment = signal<MoraSegment>('TODOS');
@@ -14,14 +14,11 @@ export class CarteraService {
   sortField = signal<keyof Debtor>('daysOverdue');
   sortDirection = signal<'asc' | 'desc'>('desc');
 
-  // Slide-over state
   selectedDebtor = signal<Debtor | null>(null);
   isSlideOverOpen = signal<boolean>(false);
 
-  // KPIs
   kpis = signal(MOCK_KPIS);
 
-  // Lista filtrada y ordenada computada
   filteredDebtors = computed(() => {
     let list = [...this.debtorsList()];
     const query = this.searchTerm().trim().toLowerCase();
@@ -30,9 +27,8 @@ export class CarteraService {
     const field = this.sortField();
     const direction = this.sortDirection();
 
-    // 1. Filtrado por texto
     if (query) {
-      list = list.filter(d => 
+      list = list.filter(d =>
         d.name.toLowerCase().includes(query) ||
         d.documentNumber.includes(query) ||
         d.portfolio.toLowerCase().includes(query) ||
@@ -40,7 +36,6 @@ export class CarteraService {
       );
     }
 
-    // 2. Filtrado por tramo de mora
     if (segment !== 'TODOS') {
       list = list.filter(d => {
         switch (segment) {
@@ -54,12 +49,10 @@ export class CarteraService {
       });
     }
 
-    // 3. Filtrado por estado
     if (status !== 'TODOS') {
       list = list.filter(d => d.status === status);
     }
 
-    // 4. Ordenamiento
     list.sort((a, b) => {
       const valA = a[field];
       const valB = b[field];
@@ -75,7 +68,6 @@ export class CarteraService {
     return list;
   });
 
-  // Métodos de control
   setSearch(term: string) {
     this.searchTerm.set(term);
   }
@@ -106,7 +98,6 @@ export class CarteraService {
     this.isSlideOverOpen.set(false);
   }
 
-  // Registrar gestión o promesa reactivamente
   registerManagement(debtorId: string, record: {
     channel: 'LLAMADA' | 'WHATSAPP' | 'CORREO' | 'VISITA';
     tipificacionN1: string;
@@ -136,8 +127,8 @@ export class CarteraService {
         if (d.id === debtorId) {
           const updatedHistory = [newRecord, ...d.managementHistory];
           const updatedStatus = record.newStatus || (record.promiseAmount ? 'EN_NEGOCIACION' : d.status);
-          const updatedResult = record.promiseAmount 
-            ? `Promesa S/ ${record.promiseAmount.toLocaleString('es-PE', { minimumFractionDigits: 2 })}` 
+          const updatedResult = record.promiseAmount
+            ? `Promesa S/ ${record.promiseAmount.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`
             : record.tipificacionN2;
 
           const updatedDebtor: Debtor = {
@@ -150,7 +141,6 @@ export class CarteraService {
             nextActionType: record.promiseAmount ? 'Seguimiento de promesa' : d.nextActionType
           };
 
-          // Actualizar deudor seleccionado si está abierto
           if (this.selectedDebtor()?.id === debtorId) {
             this.selectedDebtor.set(updatedDebtor);
           }

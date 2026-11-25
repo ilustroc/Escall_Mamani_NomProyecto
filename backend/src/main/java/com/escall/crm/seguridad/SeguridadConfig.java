@@ -28,13 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Reglas de seguridad de la API.
- *  - /api/auth/login -> abierto (no existe registro público de usuarios, RF01)
- *  - /api/**         -> requiere token JWT válido
- * El permiso fino por rol (Asesor / Supervisor / Administrador) está en cada
- * controlador con @PreAuthorize, que es la "matriz de permisos" en código.
- */
 @Configuration
 @EnableMethodSecurity
 public class SeguridadConfig {
@@ -42,10 +35,10 @@ public class SeguridadConfig {
     @Bean
     SecurityFilterChain filtroSeguridad(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // API sin cookies de sesión: CSRF no aplica
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> { })
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers(h -> h.frameOptions(f -> f.sameOrigin())) // permite la consola H2 en modo demo
+                .headers(h -> h.frameOptions(f -> f.sameOrigin()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login", "/api/publico/saludo", "/actuator/health", "/h2-console/**", "/error").permitAll()
@@ -55,7 +48,6 @@ public class SeguridadConfig {
         return http.build();
     }
 
-    /** Lee el claim "roles" del token y lo convierte en ROLE_ADMIN / ROLE_VENDEDOR. */
     private JwtAuthenticationConverter convertidorRoles() {
         JwtGrantedAuthoritiesConverter roles = new JwtGrantedAuthoritiesConverter();
         roles.setAuthoritiesClaimName("roles");

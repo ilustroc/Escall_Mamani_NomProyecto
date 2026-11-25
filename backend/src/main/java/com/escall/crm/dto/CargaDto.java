@@ -5,7 +5,6 @@ import com.escall.crm.modelo.Carga;
 import java.time.Instant;
 import java.util.List;
 
-/** Resultado de una carga: registros aceptados, rechazados y el motivo de cada rechazo (RF21). */
 public record CargaDto(Long id, String tipo, String nombreArchivo, String usuario, int total, int aceptados,
                        int rechazados, List<String> errores, Instant creadoEn) {
 

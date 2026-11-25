@@ -1,8 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-/**
- * Standard HTTP Error Parser and Localized Message Formatter.
- */
 export function getErrorMessage(error: unknown): string {
   if (!(error instanceof HttpErrorResponse)) {
     return 'No fue posible completar la operación.';
@@ -25,5 +22,4 @@ export function getErrorMessage(error: unknown): string {
   return error.error?.mensaje || `No se pudo completar la operación (HTTP ${error.status}).`;
 }
 
-/** Compatibility alias */
 export const mensajeError = getErrorMessage;

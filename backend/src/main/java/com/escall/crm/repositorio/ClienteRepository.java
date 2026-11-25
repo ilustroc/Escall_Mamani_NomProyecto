@@ -16,7 +16,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     boolean existsByDocumento(String documento);
 
-    /** Búsqueda por documento, nombre o número de operación (todas las carteras). */
     @Query("""
             select c from Cliente c
             where c.documento like :patron
@@ -25,7 +24,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
             order by c.nombres""")
     List<Cliente> buscar(@Param("patron") String patron, Pageable limite);
 
-    /** Igual que buscar(), pero solo clientes con alguna cuenta asignada a los asesores indicados. */
     @Query("""
             select c from Cliente c
             where (c.documento like :patron

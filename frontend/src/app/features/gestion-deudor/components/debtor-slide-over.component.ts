@@ -10,19 +10,17 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
   standalone: true,
   imports: [CommonModule, FormsModule, CurrencyPenPipe, StatusBadgeComponent],
   template: `
-    <!-- Backdrop difuminado sutil -->
-    <div *ngIf="cartera.isSlideOverOpen()" 
+
+    <div *ngIf="cartera.isSlideOverOpen()"
          (click)="cartera.closeDebtorDrawer()"
          class="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-40 transition-opacity duration-300">
     </div>
 
-    <!-- Panel lateral (Slide-over) -->
     <div [ngClass]="cartera.isSlideOverOpen() ? 'translate-x-0' : 'translate-x-full'"
          class="fixed inset-y-0 right-0 w-full max-w-xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out">
-      
-      <!-- Contenido si hay deudor seleccionado -->
+
       <ng-container *ngIf="cartera.selectedDebtor() as debtor">
-        <!-- Drawer Header -->
+
         <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 flex items-start justify-between">
           <div>
             <div class="flex items-center gap-2 mb-1.5">
@@ -42,7 +40,7 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
             </p>
           </div>
 
-          <button (click)="cartera.closeDebtorDrawer()" 
+          <button (click)="cartera.closeDebtorDrawer()"
                   class="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -50,7 +48,6 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
           </button>
         </div>
 
-        <!-- Metric Balance Strip -->
         <div class="px-6 py-3.5 bg-slate-100/60 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 grid grid-cols-3 gap-4">
           <div>
             <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Deuda Vencida</p>
@@ -72,17 +69,15 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
           </div>
         </div>
 
-        <!-- Body con scroll -->
         <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
 
-          <!-- 1. Directorio de Contactos & Canales -->
           <section>
             <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center justify-between">
               <span>Directorio de Contacto</span>
               <span class="text-[11px] font-normal normal-case text-slate-500">{{ debtor.city }}</span>
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div *ngFor="let phone of debtor.phones" 
+              <div *ngFor="let phone of debtor.phones"
                    class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between hover:border-slate-300 transition-colors">
                 <div>
                   <div class="flex items-center gap-1.5">
@@ -92,13 +87,13 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
                   <p class="text-[10px] text-slate-500 dark:text-slate-400">{{ phone.label }}</p>
                 </div>
                 <div class="flex items-center gap-1">
-                  <!-- Botón Llamar -->
+
                   <a [href]="'tel:' + phone.number" class="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300" title="Iniciar llamada">
                     <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                     </svg>
                   </a>
-                  <!-- Botón WhatsApp -->
+
                   <a *ngIf="phone.type === 'WHATSAPP' || phone.type === 'MOVIL_TITULAR'"
                      [href]="'https://wa.me/' + phone.number.replace('+', '').replace(/\\s/g, '')" target="_blank"
                      class="p-1.5 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-emerald-600" title="Mensaje WhatsApp">
@@ -111,7 +106,6 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
             </div>
           </section>
 
-          <!-- 2. Desglose de Facturas / Pagarés -->
           <section>
             <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center justify-between">
               <span>Facturas y Pagarés Vencidos</span>
@@ -143,16 +137,15 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
             </div>
           </section>
 
-          <!-- 3. Línea de Tiempo de Gestiones Previas -->
           <section>
             <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center justify-between">
               <span>Historial Cronológico de Gestiones</span>
               <span class="text-[11px] text-slate-500 font-normal">Últimas acciones</span>
             </h3>
-            
+
             <div class="relative border-l-2 border-slate-200 dark:border-slate-800 ml-3 space-y-4 py-1">
               <div *ngFor="let h of debtor.managementHistory" class="relative pl-6">
-                <!-- Dot indicator -->
+
                 <div class="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 bg-indigo-600"></div>
 
                 <div class="p-3 rounded-lg border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-xs">
@@ -185,7 +178,6 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
 
         </div>
 
-        <!-- Sticky Footer: Formulario Rápido de Acción -->
         <div class="p-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg">
           <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-3 flex items-center justify-between">
             <span>Registrar Nueva Gestión</span>
@@ -197,7 +189,7 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
 
           <div class="space-y-3">
             <div class="grid grid-cols-2 gap-2.5">
-              <!-- Canal -->
+
               <div>
                 <label class="block text-[11px] font-medium text-slate-500 mb-1">Canal de Contacto</label>
                 <select [(ngModel)]="newRecord.channel" class="w-full text-xs py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none">
@@ -208,7 +200,6 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
                 </select>
               </div>
 
-              <!-- Tipificación N2 -->
               <div>
                 <label class="block text-[11px] font-medium text-slate-500 mb-1">Resultado (N2)</label>
                 <select [(ngModel)]="newRecord.tipificacionN2" (change)="onResultChange()" class="w-full text-xs py-1.5 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none">
@@ -221,7 +212,6 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
               </div>
             </div>
 
-            <!-- Campos de Promesa (condicionales si es promesa) -->
             <div *ngIf="newRecord.tipificacionN2 === 'Promesa de pago'" class="grid grid-cols-2 gap-2.5 p-2.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60">
               <div>
                 <label class="block text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 mb-1">Fecha Compromiso</label>
@@ -233,15 +223,13 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
               </div>
             </div>
 
-            <!-- Notas -->
             <div>
               <label class="block text-[11px] font-medium text-slate-500 mb-1">Observaciones de la llamada</label>
               <textarea [(ngModel)]="newRecord.notes" rows="2" placeholder="Resumen de acuerdo o comentarios..." class="w-full text-xs p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none resize-none"></textarea>
             </div>
 
-            <!-- Submit Button -->
             <div class="flex items-center gap-2 pt-1">
-              <button (click)="submitManagement(debtor.id)" 
+              <button (click)="submitManagement(debtor.id)"
                       [disabled]="!newRecord.notes"
                       class="flex-1 py-2 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 text-xs font-semibold shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 Guardar Gestión y Actualizar Fila
@@ -297,7 +285,6 @@ export class DebtorSlideOverComponent {
       promiseAmount: this.newRecord.tipificacionN2 === 'Promesa de pago' ? Number(this.newRecord.promiseAmount) : undefined
     });
 
-    // Reset notes
     this.newRecord.notes = '';
   }
 }

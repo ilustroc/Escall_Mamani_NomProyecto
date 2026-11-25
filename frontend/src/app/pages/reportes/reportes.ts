@@ -66,7 +66,6 @@ export class ReportesPage {
     this.reportRows().reduce((sum, r) => sum + (r.monto || 0), 0)
   );
 
-  // Backward compatibility getters
   get form() { return this.filterForm; }
   get opciones() { return this.filterOptions; }
   get errorOpciones() { return this.filterOptionsError; }
@@ -165,7 +164,6 @@ export class ReportesPage {
     downloadCsv(`escall-${type}.csv`, [header, ...rows]);
   }
 
-  // Backward-compatibility aliases
   cambiarPeriodo(): void { this.onPeriodChange(); }
   consultar(): void { this.loadReport(); }
   exportar(): void { this.exportReport(); }

@@ -22,10 +22,6 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Convierte cualquier error en una respuesta JSON clara y en español.
- * Así el frontend puede mostrar el mensaje directamente al usuario.
- */
 @RestControllerAdvice
 public class ManejadorErrores {
 
@@ -62,7 +58,6 @@ public class ManejadorErrores {
         return responder(HttpStatus.BAD_REQUEST, "El formato de los datos enviados no es válido");
     }
 
-    /** Falta un archivo o un parámetro obligatorio en la petición (400, no 500). */
     @ExceptionHandler(MissingServletRequestPartException.class)
     ResponseEntity<ErrorRespuesta> archivoFaltante(MissingServletRequestPartException e) {
         return responder(HttpStatus.BAD_REQUEST, "Debes adjuntar el archivo (campo \"" + e.getRequestPartName() + "\")");
@@ -79,7 +74,6 @@ public class ManejadorErrores {
         return responder(HttpStatus.CONFLICT, "La operación entra en conflicto con datos existentes (¿registro duplicado?)");
     }
 
-    /** @PreAuthorize rechazó la acción: el rol del usuario no tiene permiso (403). */
     @ExceptionHandler(AccessDeniedException.class)
     ResponseEntity<ErrorRespuesta> sinPermiso(AccessDeniedException e) {
         return responder(HttpStatus.FORBIDDEN, "No tienes permiso para realizar esta acción");

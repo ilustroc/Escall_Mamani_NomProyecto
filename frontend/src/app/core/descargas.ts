@@ -1,6 +1,3 @@
-/**
- * Utility to download CSV files, sanitizing formulas to prevent CSV injection in Excel.
- */
 export function downloadCsv(filename: string, rows: unknown[][]): void {
   const sanitizeCell = (val: unknown): string => {
     let str = String(val ?? '');
@@ -22,5 +19,4 @@ export function downloadCsv(filename: string, rows: unknown[][]): void {
   setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
-/** Compatibility alias */
 export const descargarCsv = downloadCsv;

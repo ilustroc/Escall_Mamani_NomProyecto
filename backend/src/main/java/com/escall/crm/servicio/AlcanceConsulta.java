@@ -16,10 +16,6 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
-/**
- * Filter Scope Resolution Service (RF11, RF14, RF15).
- * Translates query filters (period, advisor, portfolio, cohort) into date ranges and visible advisor IDs based on roles.
- */
 @Component
 @RequiredArgsConstructor
 public class AlcanceConsulta {

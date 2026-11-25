@@ -20,10 +20,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
-/**
- * Data Integration Service (RF18 - RF21): Batch loading of portfolio assignments and payments via CSV files.
- * Validates each row individually: valid rows are persisted and invalid rows are reported with line number and cause.
- */
 @Service
 @RequiredArgsConstructor
 public class IntegracionService {
@@ -51,8 +47,6 @@ public class IntegracionService {
     private final UsuarioActual usuarioActual;
     private final AuditoriaService auditoria;
     private final Reloj reloj;
-
-    // =================================================================== ASSIGNMENTS
 
     @Transactional
     public CargaDto importAssignments(MultipartFile file) {
@@ -151,8 +145,6 @@ public class IntegracionService {
         return importAssignments(archivo);
     }
 
-    // =================================================================== PAYMENTS
-
     @Transactional
     public CargaDto importPayments(MultipartFile file) {
         List<CsvRow> rows = readCsvFile(file, COLUMNAS_PAGO);
@@ -227,8 +219,6 @@ public class IntegracionService {
         return getHistory();
     }
 
-    // =================================================================== HELPER METHODS
-
     private List<CsvRow> readCsvFile(MultipartFile file, Set<String> mandatoryColumns) {
         if (file == null || file.isEmpty()) {
             throw new ReglaNegocioException("Selecciona un archivo");
@@ -292,7 +282,7 @@ public class IntegracionService {
             try {
                 return LocalDate.parse(value.trim(), formatter);
             } catch (DateTimeParseException ignored) {
-                // Try next pattern
+
             }
         }
         throw new ReglaNegocioException("fecha inválida \"" + value + "\" (usa AAAA-MM-DD o DD/MM/AAAA)");

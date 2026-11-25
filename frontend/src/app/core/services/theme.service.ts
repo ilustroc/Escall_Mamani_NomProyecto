@@ -7,7 +7,7 @@ export class ThemeService {
   isDark = signal<boolean>(false);
 
   constructor() {
-    // Verificar preferencia guardada o preferencia del sistema
+
     const saved = localStorage.getItem('escall_theme');
     if (saved) {
       this.isDark.set(saved === 'dark');

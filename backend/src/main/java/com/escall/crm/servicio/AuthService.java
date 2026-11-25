@@ -13,9 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Authentication and Security Session Service (RF01 - RF02).
- */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -26,7 +23,6 @@ public class AuthService {
     private final UsuarioActual usuarioActual;
     private final AuditoriaService auditoria;
 
-    /** RF01: Authenticate with username and password, with security audit trail. */
     @Transactional(noRollbackFor = CredencialesInvalidasException.class)
     public LoginResponse login(LoginRequest req) {
         Usuario u = usuarios.findByUsuarioIgnoreCase(req.usuario().trim())
@@ -41,7 +37,6 @@ public class AuthService {
         return new LoginResponse(token.valor(), token.expiraEn(), UsuarioDto.desde(u));
     }
 
-    /** RF02: Record user session logout event. */
     @Transactional
     public void logout() {
         Usuario u = usuarioActual.obtener();

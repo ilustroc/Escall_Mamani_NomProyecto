@@ -9,7 +9,7 @@ import { ThemeService } from '../../core/services/theme.service';
   imports: [CommonModule, RouterModule],
   template: `
     <aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-screen select-none transition-colors">
-      <!-- Brand Header -->
+
       <div class="h-16 px-5 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-slate-900 dark:bg-slate-100 flex items-center justify-center text-white dark:text-slate-900 font-bold text-sm shadow-sm">
@@ -25,13 +25,12 @@ import { ThemeService } from '../../core/services/theme.service';
         </div>
       </div>
 
-      <!-- Navigation items -->
       <div class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         <div class="px-2 pb-1.5 text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
           Módulos Principales
         </div>
 
-        <a routerLink="/dashboard" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium" 
+        <a routerLink="/dashboard" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
           <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
@@ -39,7 +38,7 @@ import { ThemeService } from '../../core/services/theme.service';
           <span>Dashboard Ejecutivo</span>
         </a>
 
-        <a routerLink="/cartera" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium" 
+        <a routerLink="/cartera" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
            class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
           <div class="flex items-center gap-3">
             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -50,7 +49,7 @@ import { ThemeService } from '../../core/services/theme.service';
           <span class="text-[11px] font-mono px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-semibold">19</span>
         </a>
 
-        <a routerLink="/reportes" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium" 
+        <a routerLink="/reportes" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
           <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>
@@ -87,7 +86,6 @@ import { ThemeService } from '../../core/services/theme.service';
         </div>
       </div>
 
-      <!-- User footer -->
       <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
         <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           <div class="flex items-center gap-2.5">
@@ -99,7 +97,7 @@ import { ThemeService } from '../../core/services/theme.service';
               <p class="text-[10px] text-slate-500 dark:text-slate-400">Asesor Senior</p>
             </div>
           </div>
-          <button (click)="theme.toggleTheme()" [title]="theme.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'" 
+          <button (click)="theme.toggleTheme()" [title]="theme.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
                   class="p-1.5 rounded-md text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
             <svg *ngIf="!theme.isDark()" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />

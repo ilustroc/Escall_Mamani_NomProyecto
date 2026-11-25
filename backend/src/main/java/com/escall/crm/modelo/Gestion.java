@@ -7,7 +7,6 @@ import lombok.Setter;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
-/** Interacción registrada por un asesor sobre una cuenta y un teléfono. */
 @Entity
 @Table(name = "gestiones")
 @Getter
@@ -26,7 +25,6 @@ public class Gestion {
     @JoinColumn(name = "asesor_id")
     private Usuario asesor;
 
-    /** Fecha y hora local de la gestión (Lima). */
     @Column(nullable = false)
     private LocalDateTime fechaHora;
 

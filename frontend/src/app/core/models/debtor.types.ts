@@ -13,7 +13,7 @@ export interface PhoneContact {
 
 export interface OverdueInvoice {
   id: string;
-  documentNumber: string; // ej: F001-00892 o LETRA-4921
+  documentNumber: string;
   issueDate: string;
   dueDate: string;
   daysOverdue: number;
@@ -28,8 +28,8 @@ export interface ManagementRecord {
   date: string;
   advisorName: string;
   channel: 'LLAMADA' | 'WHATSAPP' | 'CORREO' | 'VISITA';
-  tipificacionN1: string; // ej: Contacto directo, Ilocalizado, etc.
-  tipificacionN2: string; // ej: Promesa de pago, Negativa, etc.
+  tipificacionN1: string;
+  tipificacionN2: string;
   notes: string;
   promiseDate?: string;
   promiseAmount?: number;
@@ -41,7 +41,7 @@ export interface Debtor {
   documentNumber: string;
   name: string;
   legalRepresentative?: string;
-  portfolio: string; // Cartera bancaria
+  portfolio: string;
   totalDebt: number;
   overdueDebt: number;
   daysOverdue: number;
@@ -61,7 +61,7 @@ export interface Debtor {
 
 export interface KpiMetrics {
   totalPortfolio: number;
-  totalPortfolioChange: number; // variación %
+  totalPortfolioChange: number;
   recoveryRate: number;
   recoveryTarget: number;
   promisesTodayCount: number;

@@ -4,9 +4,6 @@ import { Observable, tap } from 'rxjs';
 import { API_URL } from './api.config';
 import { Sesion } from './models';
 
-/**
- * Authentication and Session Management Service.
- */
 @Injectable({
   providedIn: 'root'
 })
@@ -15,7 +12,7 @@ export class AuthService {
   private readonly storageKey = 'escall.sesion';
 
   readonly session = signal<Sesion | null>(this.loadStoredSession());
-  /** Compatibility alias */
+
   readonly sesion = this.session;
 
   private loadStoredSession(): Sesion | null {
@@ -37,7 +34,6 @@ export class AuthService {
     return !!current && Date.parse(current.expiraEn) > Date.now();
   }
 
-  /** Compatibility alias */
   vigente(): boolean {
     return this.isAuthenticated();
   }
@@ -59,7 +55,6 @@ export class AuthService {
     this.session.set(null);
   }
 
-  /** Compatibility alias */
   limpiar(): void {
     this.clearSession();
   }

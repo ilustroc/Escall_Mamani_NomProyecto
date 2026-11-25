@@ -16,10 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Typification Tree Configuration Service (RF09 and RF22).
- * Logical deletion ensures historical audit trails remain intact.
- */
 @Service
 @RequiredArgsConstructor
 public class TipificacionService {

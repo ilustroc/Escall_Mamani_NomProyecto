@@ -16,7 +16,6 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Nombre de usuario para iniciar sesión (ej: "jperez"). */
     @Column(nullable = false, unique = true, length = 40)
     private String usuario;
 
@@ -33,7 +32,6 @@ public class Usuario {
     @Column(nullable = false, length = 20)
     private Rol rol;
 
-    /** Solo para asesores: supervisor a cuyo equipo pertenece. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supervisor_id")
     private Usuario supervisor;

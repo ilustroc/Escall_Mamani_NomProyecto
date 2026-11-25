@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-/** Indicadores operativos del periodo (RF10 - RF12). */
 public record DashboardDto(
         LocalDate desde,
         LocalDate hasta,

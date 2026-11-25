@@ -9,9 +9,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Audit Logging Service (RF23): Records critical actions (who, what, entity, and timestamp).
- */
 @Service
 @RequiredArgsConstructor
 public class AuditoriaService {

@@ -1,12 +1,6 @@
 CREATE DATABASE IF NOT EXISTS escall_avance3 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE escall_avance3;
 
--- =====================================================================
--- CRM WEB PARA LA GESTIÓN DE COBRANZAS - ESCALL PERÚ S.A.C.
--- Base de datos: escall_avance3
--- Motor: MySQL 8.0 / MariaDB 10.6
--- =====================================================================
-
 CREATE TABLE IF NOT EXISTS usuarios (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
     usuario         VARCHAR(40)  NOT NULL,
@@ -29,9 +23,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
         CHECK (rol IN ('ADMIN', 'SUPERVISOR', 'ASESOR'))
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 2. CLIENTES (identificados por documento) y sus TELÉFONOS
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS clientes (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
     tipo_documento  VARCHAR(10)  NOT NULL DEFAULT 'DNI',
@@ -56,10 +47,6 @@ CREATE TABLE IF NOT EXISTS telefonos (
     CONSTRAINT fk_telefonos_cliente FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 3. CUENTAS: obligación del cliente (operación, entidad, producto,
---    cartera, cosecha y deuda).
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cuentas (
     id                BIGINT        NOT NULL AUTO_INCREMENT,
     cliente_id        BIGINT        NOT NULL,
@@ -81,9 +68,6 @@ CREATE TABLE IF NOT EXISTS cuentas (
     INDEX idx_cuentas_cosecha (cosecha)
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 4. CARGAS (Integración de Datos): historial de archivos procesados
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS cargas (
     id                BIGINT        NOT NULL AUTO_INCREMENT,
     tipo              VARCHAR(20)   NOT NULL,
@@ -99,11 +83,6 @@ CREATE TABLE IF NOT EXISTS cargas (
     CONSTRAINT ck_cargas_tipo CHECK (tipo IN ('ASIGNACION', 'PAGO'))
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 5. ASIGNACIONES: qué asesor gestiona cada cuenta y desde cuándo.
---    Solo una asignación activa por cuenta; las anteriores quedan como
---    historial (activa = FALSE, con fecha_fin).
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS asignaciones (
     id                BIGINT       NOT NULL AUTO_INCREMENT,
     cuenta_id         BIGINT       NOT NULL,
@@ -120,10 +99,6 @@ CREATE TABLE IF NOT EXISTS asignaciones (
     INDEX idx_asignaciones_cuenta_activa (cuenta_id, activa)
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 6. ÁRBOL DE TIPIFICACIONES
---    Nivel 1 = tipo de contacto. Nivel 2 = resultado (depende del nivel 1)
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tipificaciones_n1 (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
     nombre          VARCHAR(80)  NOT NULL,
@@ -146,10 +121,6 @@ CREATE TABLE IF NOT EXISTS tipificaciones_n2 (
     CONSTRAINT fk_tipificaciones_n2_n1 FOREIGN KEY (n1_id) REFERENCES tipificaciones_n1 (id)
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 7. GESTIONES: cada interacción del asesor con una cuenta.
---    Se guardan N1 y N2 para conservar el historial exacto (RNF10).
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS gestiones (
     id                    BIGINT        NOT NULL AUTO_INCREMENT,
     cuenta_id             BIGINT        NOT NULL,
@@ -169,9 +140,6 @@ CREATE TABLE IF NOT EXISTS gestiones (
     INDEX idx_gestiones_asesor_fecha (asesor_id, fecha_hora)
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 8. PROMESAS DE PAGO: nacen de una gestión cuya tipificación lo exige
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS promesas (
     id                BIGINT        NOT NULL AUTO_INCREMENT,
     gestion_id        BIGINT        NOT NULL,
@@ -191,10 +159,6 @@ CREATE TABLE IF NOT EXISTS promesas (
     INDEX idx_promesas_fecha (fecha_compromiso)
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 9. PAGOS: cargados desde Integración de Datos.
---    La clave única evita registrar el mismo pago dos veces.
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pagos (
     id              BIGINT        NOT NULL AUTO_INCREMENT,
     cuenta_id       BIGINT        NOT NULL,
@@ -211,9 +175,6 @@ CREATE TABLE IF NOT EXISTS pagos (
     INDEX idx_pagos_fecha (fecha_pago)
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 10. AUDITORÍA: acciones críticas (RF23)
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS auditoria (
     id              BIGINT        NOT NULL AUTO_INCREMENT,
     usuario         VARCHAR(40)   NOT NULL,
@@ -226,10 +187,6 @@ CREATE TABLE IF NOT EXISTS auditoria (
     INDEX idx_auditoria_fecha (fecha)
 ) ENGINE = InnoDB;
 
--- ---------------------------------------------------------------------
--- 11. VISTA DE REPORTE: productividad por asesor (útil para análisis)
---     SELECT * FROM vista_productividad_asesor;
--- ---------------------------------------------------------------------
 CREATE OR REPLACE VIEW vista_productividad_asesor AS
 SELECT u.id                                   AS asesor_id,
        u.nombre                               AS asesor,
@@ -243,12 +200,3 @@ LEFT JOIN tipificaciones_n1 n1 ON n1.id = g.tipificacion_n1_id
 LEFT JOIN promesas p           ON p.gestion_id = g.id
 WHERE u.rol = 'ASESOR'
 GROUP BY u.id, u.nombre;
-
--- ---------------------------------------------------------------------
--- 12. (OPCIONAL, RECOMENDADO) Usuario propio para la aplicación.
---     Más seguro que usar "root". Quita los "-- ", cambia la contraseña,
---     ejecuta y usa esos datos en backend/.env
--- ---------------------------------------------------------------------
--- CREATE USER IF NOT EXISTS 'crm_app'@'localhost' IDENTIFIED BY 'CambiaEstaClave2026';
--- GRANT SELECT, INSERT, UPDATE, DELETE ON ilustroc_universidad.* TO 'crm_app'@'localhost';
--- FLUSH PRIVILEGES;

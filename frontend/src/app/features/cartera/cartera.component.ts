@@ -12,8 +12,7 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
   imports: [CommonModule, FormsModule, CurrencyPenPipe, StatusBadgeComponent],
   template: `
     <div class="space-y-6 max-w-7xl mx-auto pb-10">
-      
-      <!-- Encabezado de la página -->
+
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div class="flex items-center gap-2">
@@ -29,7 +28,6 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
           </p>
         </div>
 
-        <!-- Quick Summary Badge -->
         <div class="flex items-center gap-3">
           <div class="px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs flex items-center gap-2">
             <span class="text-slate-500">Deudores filtrados:</span>
@@ -38,32 +36,29 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
         </div>
       </div>
 
-      <!-- Barra de Filtros y Herramientas estilo Linear -->
       <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle space-y-3.5">
-        
-        <!-- Fila 1: Búsqueda y Selector de Estado -->
+
         <div class="flex flex-col md:flex-row md:items-center gap-3">
-          <!-- Input de Búsqueda -->
+
           <div class="relative flex-1">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
             </div>
-            <input 
-              type="text" 
-              [ngModel]="cartera.searchTerm()" 
+            <input
+              type="text"
+              [ngModel]="cartera.searchTerm()"
               (ngModelChange)="cartera.setSearch($event)"
               placeholder="Filtrar por razón social, nombre, DNI, RUC o producto bancario..."
               class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 font-sans"
             />
           </div>
 
-          <!-- Filtro por Estado de Deuda -->
           <div class="flex items-center gap-2">
             <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Estado:</span>
-            <select 
-              [ngModel]="cartera.selectedStatus()" 
+            <select
+              [ngModel]="cartera.selectedStatus()"
               (ngModelChange)="cartera.setStatus($event)"
               class="text-xs py-2 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none">
               <option value="TODOS">Todos los estados</option>
@@ -75,15 +70,14 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
           </div>
         </div>
 
-        <!-- Fila 2: Pills de Filtrado por Tramo de Mora -->
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
           <span class="text-slate-400 font-medium mr-1 text-[11px] uppercase tracking-wider">Mora:</span>
-          
-          <button 
+
+          <button
             *ngFor="let seg of moraSegments"
             (click)="cartera.setSegment(seg.id)"
-            [ngClass]="cartera.selectedSegment() === seg.id 
-              ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold shadow-xs' 
+            [ngClass]="cartera.selectedSegment() === seg.id
+              ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold shadow-xs'
               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'"
             class="px-3 py-1 rounded-full transition-all text-xs font-mono whitespace-nowrap flex items-center gap-1">
             <span>{{ seg.label }}</span>
@@ -93,12 +87,10 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
 
       </div>
 
-      <!-- Tabla de Deudores de Alto Rendimiento -->
       <div class="border border-slate-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-subtle overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left border-collapse">
-            
-            <!-- Encabezados con ordenamiento -->
+
             <thead class="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-medium select-none">
               <tr>
                 <th (click)="cartera.toggleSort('name')" class="px-4 py-3 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
@@ -132,10 +124,8 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
               </tr>
             </thead>
 
-            <!-- Filas de la tabla -->
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
-              
-              <!-- Empty state si no hay resultados -->
+
               <tr *ngIf="cartera.filteredDebtors().length === 0">
                 <td colspan="8" class="py-12 text-center text-slate-400">
                   <svg class="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,12 +136,10 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
                 </td>
               </tr>
 
-              <!-- Filas de deudores -->
               <tr *ngFor="let debtor of cartera.filteredDebtors()"
                   (click)="cartera.openDebtorDrawer(debtor)"
                   class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 cursor-pointer transition-colors group">
-                
-                <!-- Cliente -->
+
                 <td class="px-4 py-3.5">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
@@ -168,31 +156,26 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
                   </div>
                 </td>
 
-                <!-- Cartera -->
                 <td class="px-4 py-3.5">
                   <span class="text-slate-600 dark:text-slate-300 font-medium">
                     {{ debtor.portfolio }}
                   </span>
                 </td>
 
-                <!-- Saldo Vencido -->
                 <td class="px-4 py-3.5 text-right font-mono font-bold text-slate-900 dark:text-slate-100 tabular-nums">
                   {{ debtor.overdueDebt | currencyPen }}
                 </td>
 
-                <!-- Días de Mora -->
                 <td class="px-4 py-3.5 text-center font-mono tabular-nums">
                   <span [ngClass]="getDaysClass(debtor.daysOverdue)" class="px-2 py-0.5 rounded text-xs font-semibold">
                     {{ debtor.daysOverdue }}d
                   </span>
                 </td>
 
-                <!-- Estado Badge -->
                 <td class="px-4 py-3.5 text-center">
                   <app-status-badge [status]="debtor.status"></app-status-badge>
                 </td>
 
-                <!-- Última Gestión -->
                 <td class="px-4 py-3.5">
                   <div>
                     <p class="text-slate-800 dark:text-slate-200 font-medium truncate max-w-[150px]">
@@ -204,7 +187,6 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
                   </div>
                 </td>
 
-                <!-- Próxima Acción -->
                 <td class="px-4 py-3.5">
                   <div class="text-[11px]">
                     <span class="font-mono text-indigo-600 dark:text-indigo-400 font-medium block">
@@ -216,11 +198,10 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
                   </div>
                 </td>
 
-                <!-- Acciones Rápidas -->
                 <td class="px-4 py-3.5 text-right" (click)="$event.stopPropagation()">
                   <div class="flex items-center justify-end gap-1.5">
-                    <!-- Botón Llamar -->
-                    <a [href]="'tel:' + debtor.phones[0]?.number" 
+
+                    <a [href]="'tel:' + debtor.phones[0]?.number"
                        title="Llamar teléfono principal"
                        class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors">
                       <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -228,8 +209,7 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
                       </svg>
                     </a>
 
-                    <!-- Botón Gestionar (Abre Drawer) -->
-                    <button 
+                    <button
                       (click)="cartera.openDebtorDrawer(debtor)"
                       class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-semibold transition-colors flex items-center gap-1">
                       <span>Gestionar</span>
@@ -244,7 +224,6 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
           </table>
         </div>
 
-        <!-- Footer de la tabla: resumen de saldos -->
         <div class="px-4 py-3 bg-slate-50/60 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
           <span>Mostrando <strong class="text-slate-800 dark:text-slate-200 font-mono">{{ cartera.filteredDebtors().length }}</strong> cuentas auditadas</span>
           <div class="flex items-center gap-4 font-mono">

@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import java.time.Instant;
 
-/** Registro de un archivo procesado en Integración de Datos. */
 @Entity
 @Table(name = "cargas")
 @Getter
@@ -39,7 +38,6 @@ public class Carga {
     @Column(nullable = false)
     private int rechazados;
 
-    /** Lista de filas rechazadas con su motivo (una por línea). */
     @Column(length = 60000)
     private String detalleErrores;
 

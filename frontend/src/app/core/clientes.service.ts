@@ -4,9 +4,6 @@ import { Observable } from 'rxjs';
 import { API_URL } from './api.config';
 import { ClienteResumen, ClienteDetalle, ClienteEntrada, Tipificacion, Gestion, Dashboard } from './models';
 
-/**
- * Client and Operational Portfolio HTTP Service.
- */
 @Injectable({
   providedIn: 'root'
 })
@@ -49,7 +46,6 @@ export class ClientesService {
     });
   }
 
-  // Compatibility aliases
   buscar(q: string) { return this.searchClients(q); }
   detalle(id: number) { return this.getClientDetails(id); }
   crear(c: ClienteEntrada) { return this.createClient(c); }

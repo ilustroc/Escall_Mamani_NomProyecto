@@ -18,9 +18,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Operational Dashboard Service (RF10 - RF12): Metrics for collections, contacts, promises, and payments.
- */
 @Service
 @RequiredArgsConstructor
 public class DashboardService {
@@ -70,9 +67,6 @@ public class DashboardService {
         return calculateDashboard(filtros);
     }
 
-    /**
-     * Filter dropdown options available for the current user's role scope.
-     */
     @Transactional(readOnly = true)
     public OpcionesFiltroDto getFilterOptions() {
         List<Long> visibleAdvisorIds = usuarioActual.asesoresVisibles(usuarioActual.obtener());
@@ -87,8 +81,6 @@ public class DashboardService {
     public OpcionesFiltroDto opciones() {
         return getFilterOptions();
     }
-
-    // ---------------------------------------------------------------- Calculation helpers
 
     private List<DashboardDto.FilaAsesor> byAdvisor(
             List<Long> ids,

@@ -5,7 +5,6 @@ import com.escall.crm.modelo.TipificacionN2;
 
 import java.util.List;
 
-/** Nodo de nivel 1 del árbol con sus resultados de nivel 2 (RF09). */
 public record TipificacionDto(Long id, String nombre, boolean esContacto, int orden, boolean activo,
                               List<Resultado> resultados) {
 

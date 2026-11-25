@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Módulos Resumen (RF03 - RF06) y Gestiones (RF07 - RF09). */
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -22,7 +21,6 @@ public class ResumenController {
     private final GestionService gestiones;
     private final TipificacionService tipificaciones;
 
-    /** Ej: GET /api/clientes?q=45879632  (documento, operación o nombre) */
     @GetMapping("/clientes")
     public List<ClienteResumenDto> buscar(@RequestParam String q) {
         return clientes.buscar(q);
@@ -33,7 +31,6 @@ public class ResumenController {
         return clientes.detalle(id);
     }
 
-    /** CRUD - Crear: alta de cliente (solo administrador). */
     @PostMapping("/clientes")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
@@ -41,13 +38,11 @@ public class ResumenController {
         return clientes.crear(req);
     }
 
-    /** CRUD - Actualizar: corrige datos de contacto de un cliente que el usuario puede ver. */
     @PutMapping("/clientes/{id}")
     public ClienteDetalleDto actualizarCliente(@PathVariable Long id, @Valid @RequestBody ClienteEdicionRequest req) {
         return clientes.actualizar(id, req);
     }
 
-    /** CRUD - Eliminar: solo clientes sin cuentas (solo administrador). */
     @DeleteMapping("/clientes/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
@@ -55,7 +50,6 @@ public class ResumenController {
         clientes.eliminar(id);
     }
 
-    /** Árbol de tipificaciones activas para el formulario de gestión. */
     @GetMapping("/tipificaciones")
     public List<TipificacionDto> tipificaciones() {
         return tipificaciones.arbol(true);
@@ -68,14 +62,12 @@ public class ResumenController {
         return gestiones.registrar(req);
     }
 
-    /** Cuentas asignadas al asesor que inició sesión. */
     @GetMapping("/cartera")
     @PreAuthorize("hasRole('ASESOR')")
     public List<CuentaDto> cartera() {
         return clientes.cartera();
     }
 
-    /** Promesas pendientes y vencidas del asesor. */
     @GetMapping("/cartera/agenda")
     @PreAuthorize("hasRole('ASESOR')")
     public List<PromesaDto> agenda() {

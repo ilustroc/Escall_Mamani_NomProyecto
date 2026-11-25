@@ -61,7 +61,6 @@ export class UsuariosPage {
     }
   );
 
-  // Backward compatibility getters
   get auth() { return this.authService; }
   get filas() { return this.usersList; }
   get supervisores() { return this.supervisorsList; }
@@ -225,7 +224,6 @@ export class UsuariosPage {
       });
   }
 
-  // Backward-compatibility aliases
   esAdmin(): boolean { return this.isAdmin(); }
   cargar(): void { this.loadUsers(); }
   abrir(u: Usuario | null = null): void { this.openUserModal(u); }

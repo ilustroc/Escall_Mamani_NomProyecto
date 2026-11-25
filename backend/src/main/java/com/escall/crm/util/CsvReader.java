@@ -9,10 +9,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/**
- * Standard CSV Reader utility.
- * Parses CSV files with ";" or "," delimiter, handles UTF-8 BOM, and quoted values.
- */
 public final class CsvReader {
 
     public static final int MAX_ROWS = 20_000;

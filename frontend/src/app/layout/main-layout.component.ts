@@ -11,21 +11,18 @@ import { DebtorSlideOverComponent } from '../features/gestion-deudor/components/
   imports: [CommonModule, RouterModule, SidebarComponent, TopbarComponent, DebtorSlideOverComponent],
   template: `
     <div class="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
-      <!-- Sidebar fija -->
+
       <app-sidebar></app-sidebar>
 
-      <!-- Contenedor central -->
       <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <!-- Topbar superior -->
+
         <app-topbar></app-topbar>
 
-        <!-- Área de contenido con scroll -->
         <main class="flex-1 overflow-y-auto p-6 md:p-8">
           <router-outlet></router-outlet>
         </main>
       </div>
 
-      <!-- Slide-over lateral global para detalle del deudor -->
       <app-debtor-slide-over></app-debtor-slide-over>
     </div>
   `
