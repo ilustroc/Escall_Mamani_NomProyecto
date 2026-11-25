@@ -25,63 +25,106 @@ import { ThemeService } from '../../core/services/theme.service';
         </div>
       </div>
 
-      <div class="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-        <div class="px-2 pb-1.5 text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-          Módulos Principales
-        </div>
+      <div class="flex-1 py-4 px-3 space-y-4 overflow-y-auto">
+        <div class="space-y-1">
+          <div class="px-2 pb-1.5 text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
+            Módulos Principales
+          </div>
 
-        <a routerLink="/dashboard" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-          <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
-          </svg>
-          <span>Dashboard Ejecutivo</span>
-        </a>
-
-        <a routerLink="/cartera" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
-           class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-          <div class="flex items-center gap-3">
+          <a routerLink="/dashboard" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
             </svg>
-            <span>Cola de Gestión</span>
-          </div>
-          <span class="text-[11px] font-mono px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-semibold">19</span>
-        </a>
+            <span>Dashboard Ejecutivo</span>
+          </a>
 
-        <a routerLink="/reportes" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
-           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-          <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>
-          </svg>
-          <span>Reportes & Metas</span>
-        </a>
+          <a routerLink="/cartera" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+             class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <span>Cola de Gestión</span>
+            </div>
+            <span class="text-[11px] font-mono px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-semibold">19</span>
+          </a>
 
-        <div class="pt-5 px-2 pb-1.5 text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-          Carteras Activas
+          <a routerLink="/reportes" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>
+            </svg>
+            <span>Reportes & Metas</span>
+          </a>
         </div>
 
-        <div class="px-3 py-2.5 rounded-lg border border-slate-200/60 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-800/30 text-xs space-y-1.5">
-          <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
-            <span class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              BCP Comercial
-            </span>
-            <span class="font-mono text-[11px] text-slate-500">S/ 680k</span>
+        <div class="space-y-1">
+          <div class="px-2 pb-1.5 text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center justify-between">
+            <span>Integración Backend</span>
+            <span class="text-[9px] px-1 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 font-mono">REST</span>
           </div>
-          <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
-            <span class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-              BBVA Consumo
-            </span>
-            <span class="font-mono text-[11px] text-slate-500">S/ 420k</span>
+
+          <a routerLink="/conexion" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Estado Conexión (S14)</span>
+          </a>
+
+          <a routerLink="/clientes" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>Buscar Clientes REST</span>
+          </a>
+
+          <a routerLink="/importaciones" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span>Importación CSV</span>
+          </a>
+
+          <a routerLink="/usuarios" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <span>Usuarios & Roles</span>
+          </a>
+        </div>
+
+        <div class="space-y-2 pt-1">
+          <div class="px-2 pb-1 text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
+            Carteras en Gestión
           </div>
-          <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
-            <span class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-              Scotiabank Pyme
-            </span>
-            <span class="font-mono text-[11px] text-slate-500">S/ 385k</span>
+
+          <div class="px-3 py-2.5 rounded-lg border border-slate-200/60 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-800/30 text-xs space-y-1.5">
+            <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                BCP Comercial
+              </span>
+              <span class="font-mono text-[11px] text-slate-500">S/ 680k</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                BBVA Consumo
+              </span>
+              <span class="font-mono text-[11px] text-slate-500">S/ 420k</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <span class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                Scotiabank Pyme
+              </span>
+              <span class="font-mono text-[11px] text-slate-500">S/ 385k</span>
+            </div>
           </div>
         </div>
       </div>
@@ -90,11 +133,11 @@ import { ThemeService } from '../../core/services/theme.service';
         <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-medium text-xs flex items-center justify-center">
-              VQ
+              AD
             </div>
             <div class="text-left">
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight">Valeria Quispe</p>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400">Asesor Senior</p>
+              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight">Admin Sistema</p>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">ESCALL Full Stack</p>
             </div>
           </div>
           <button (click)="theme.toggleTheme()" [title]="theme.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
