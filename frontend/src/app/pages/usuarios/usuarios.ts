@@ -7,6 +7,21 @@ import { Rol, Usuario } from '../../core/models';
 import { UsuarioEntrada } from '../../core/operaciones.models';
 import { getErrorMessage } from '../../core/api-error';
 
+const DEMO_USERS_FALLBACK: Usuario[] = [
+  { id: 1, usuario: 'admin', nombre: 'Administrador del sistema', email: 'admin@escall.pe', rol: 'ADMIN', activo: true, supervisorId: null, supervisorNombre: 'Sin supervisor' },
+  { id: 2, usuario: 'sgarcia', nombre: 'Sandra García', email: 'sgarcia@escall.pe', rol: 'SUPERVISOR', activo: true, supervisorId: null, supervisorNombre: 'Sin supervisor' },
+  { id: 3, usuario: 'mrojas', nombre: 'Miguel Rojas', email: 'mrojas@escall.pe', rol: 'SUPERVISOR', activo: true, supervisorId: null, supervisorNombre: 'Sin supervisor' },
+  { id: 10, usuario: 'cchavez', nombre: 'Carmen Chávez', email: 'cchavez@escall.pe', rol: 'SUPERVISOR', activo: true, supervisorId: null, supervisorNombre: 'Sin supervisor' },
+  { id: 4, usuario: 'asesor1', nombre: 'Lucía Torres', email: 'asesor1@escall.pe', rol: 'ASESOR', activo: true, supervisorId: 2, supervisorNombre: 'Sandra García' },
+  { id: 5, usuario: 'asesor2', nombre: 'Carlos Medina', email: 'asesor2@escall.pe', rol: 'ASESOR', activo: true, supervisorId: 2, supervisorNombre: 'Sandra García' },
+  { id: 6, usuario: 'asesor3', nombre: 'Valeria Quispe', email: 'asesor3@escall.pe', rol: 'ASESOR', activo: true, supervisorId: 3, supervisorNombre: 'Miguel Rojas' },
+  { id: 7, usuario: 'asesor4', nombre: 'Diego Flores', email: 'asesor4@escall.pe', rol: 'ASESOR', activo: true, supervisorId: 2, supervisorNombre: 'Sandra García' },
+  { id: 8, usuario: 'asesor5', nombre: 'Andrea Ramos', email: 'asesor5@escall.pe', rol: 'ASESOR', activo: true, supervisorId: 3, supervisorNombre: 'Miguel Rojas' },
+  { id: 9, usuario: 'asesor6', nombre: 'Renzo Morales', email: 'asesor6@escall.pe', rol: 'ASESOR', activo: true, supervisorId: 3, supervisorNombre: 'Miguel Rojas' },
+  { id: 11, usuario: 'asesor7', nombre: 'Gabriela Mendoza', email: 'asesor7@escall.pe', rol: 'ASESOR', activo: true, supervisorId: 10, supervisorNombre: 'Carmen Chávez' },
+  { id: 12, usuario: 'asesor8', nombre: 'Martín Salazar', email: 'asesor8@escall.pe', rol: 'ASESOR', activo: true, supervisorId: 10, supervisorNombre: 'Carmen Chávez' }
+];
+
 @Component({
   selector: 'app-usuarios',
   imports: [ReactiveFormsModule],
@@ -17,8 +32,8 @@ export class UsuariosPage {
   private readonly operacionesService = inject(OperacionesService);
   private readonly fb = inject(FormBuilder);
 
-  readonly usersList = signal<Usuario[]>([]);
-  readonly supervisorsList = signal<Usuario[]>([]);
+  readonly usersList = signal<Usuario[]>(DEMO_USERS_FALLBACK);
+  readonly supervisorsList = signal<Usuario[]>(DEMO_USERS_FALLBACK.filter(u => u.rol === 'SUPERVISOR'));
   readonly searchQuery = signal('');
   readonly isLoading = signal(false);
   readonly isBusy = signal(false);
@@ -99,7 +114,13 @@ export class UsuariosPage {
           this.usersList.set(d.usuarios);
           this.supervisorsList.set(d.supervisores);
         },
-        error: (err) => this.errorMessage.set(getErrorMessage(err))
+        error: (err) => {
+          if (!this.usersList().length) {
+            this.usersList.set(DEMO_USERS_FALLBACK);
+            this.supervisorsList.set(DEMO_USERS_FALLBACK.filter(u => u.rol === 'SUPERVISOR'));
+          }
+          this.errorMessage.set(getErrorMessage(err));
+        }
       });
   }
 

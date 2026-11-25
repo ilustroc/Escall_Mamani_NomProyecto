@@ -210,18 +210,18 @@ WHERE u.rol = 'ASESOR'
 GROUP BY u.id, u.nombre;
 
 INSERT INTO usuarios (id, usuario, nombre, email, password_hash, rol, supervisor_id, activo) VALUES
-(1, 'admin', 'Administrador del sistema', 'admin@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'ADMIN', NULL, TRUE),
-(2, 'sgarcia', 'Sandra García', 'sgarcia@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'SUPERVISOR', NULL, TRUE),
-(3, 'mrojas', 'Miguel Rojas', 'mrojas@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'SUPERVISOR', NULL, TRUE),
-(4, 'asesor1', 'Lucía Torres', 'asesor1@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'ASESOR', 2, TRUE),
-(5, 'asesor2', 'Carlos Medina', 'asesor2@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'ASESOR', 2, TRUE),
-(6, 'asesor3', 'Valeria Quispe', 'asesor3@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'ASESOR', 3, TRUE),
-(7, 'asesor4', 'Diego Flores', 'asesor4@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'ASESOR', 2, TRUE),
-(8, 'asesor5', 'Andrea Ramos', 'asesor5@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'ASESOR', 3, TRUE),
-(9, 'asesor6', 'Renzo Morales', 'asesor6@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'ASESOR', 3, TRUE),
-(10, 'cchavez', 'Carmen Chávez', 'cchavez@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'SUPERVISOR', NULL, TRUE),
-(11, 'asesor7', 'Gabriela Mendoza', 'asesor7@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'ASESOR', 10, TRUE),
-(12, 'asesor8', 'Martín Salazar', 'asesor8@escall.pe', '$2a$10$w8gZ9YkG.00hU3uYg9QkTez1jC1tL2yOqM1xX/4V4cZ5rW3eYkX8i', 'ASESOR', 10, TRUE);
+(1, 'admin', 'Administrador del sistema', 'admin@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'ADMIN', NULL, TRUE),
+(2, 'sgarcia', 'Sandra García', 'sgarcia@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'SUPERVISOR', NULL, TRUE),
+(3, 'mrojas', 'Miguel Rojas', 'mrojas@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'SUPERVISOR', NULL, TRUE),
+(4, 'asesor1', 'Lucía Torres', 'asesor1@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'ASESOR', 2, TRUE),
+(5, 'asesor2', 'Carlos Medina', 'asesor2@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'ASESOR', 2, TRUE),
+(6, 'asesor3', 'Valeria Quispe', 'asesor3@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'ASESOR', 3, TRUE),
+(7, 'asesor4', 'Diego Flores', 'asesor4@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'ASESOR', 2, TRUE),
+(8, 'asesor5', 'Andrea Ramos', 'asesor5@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'ASESOR', 3, TRUE),
+(9, 'asesor6', 'Renzo Morales', 'asesor6@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'ASESOR', 3, TRUE),
+(10, 'cchavez', 'Carmen Chávez', 'cchavez@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'SUPERVISOR', NULL, TRUE),
+(11, 'asesor7', 'Gabriela Mendoza', 'asesor7@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'ASESOR', 10, TRUE),
+(12, 'asesor8', 'Martín Salazar', 'asesor8@escall.pe', '$2a$10$pCSFZ0VVkmHF88riiwv1fuK2WvXhRW6XsiUr64pMMAowyhP7MLHsC', 'ASESOR', 10, TRUE);
 
 INSERT INTO tipificaciones_n1 (id, nombre, es_contacto, orden, activo) VALUES
 (1, 'Contacto directo', TRUE, 1, TRUE),
