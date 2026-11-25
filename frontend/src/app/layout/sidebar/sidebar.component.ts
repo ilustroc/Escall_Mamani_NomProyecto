@@ -1,7 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
+import { AuthService } from '../../core/auth.service';
+import { Rol } from '../../core/models';
 
 @Component({
   selector: 'app-sidebar',
@@ -31,7 +33,7 @@ import { ThemeService } from '../../core/services/theme.service';
             Módulos Principales
           </div>
 
-          <a routerLink="/dashboard" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+          <a *ngIf="hasAnyRole('ADMIN', 'SUPERVISOR')" routerLink="/dashboard" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
              class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
@@ -50,7 +52,7 @@ import { ThemeService } from '../../core/services/theme.service';
             <span class="text-[11px] font-mono px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-semibold">19</span>
           </a>
 
-          <a routerLink="/reportes" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+          <a *ngIf="hasAnyRole('ADMIN', 'SUPERVISOR')" routerLink="/reportes" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
              class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>
@@ -81,7 +83,7 @@ import { ThemeService } from '../../core/services/theme.service';
             <span>Buscar Clientes REST</span>
           </a>
 
-          <a routerLink="/importaciones" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+          <a *ngIf="hasAnyRole('ADMIN')" routerLink="/importaciones" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
              class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -89,7 +91,7 @@ import { ThemeService } from '../../core/services/theme.service';
             <span>Importación CSV</span>
           </a>
 
-          <a routerLink="/usuarios" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
+          <a *ngIf="hasAnyRole('ADMIN', 'SUPERVISOR')" routerLink="/usuarios" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
              class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
             <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -133,13 +135,20 @@ import { ThemeService } from '../../core/services/theme.service';
         <div class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-indigo-600 text-white font-medium text-xs flex items-center justify-center">
-              AD
+              {{ initials }}
             </div>
             <div class="text-left">
-              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight">Admin Sistema</p>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400">ESCALL Full Stack</p>
+              <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight">{{ currentUserName }}</p>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400">{{ currentUserRole }}</p>
             </div>
           </div>
+          <div class="flex items-center gap-1">
+          <button (click)="logout()" title="Cerrar sesión"
+                  class="p-1.5 rounded-md text-slate-500 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" aria-label="Cerrar sesión">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M18 15l3-3m0 0l-3-3m3 3H9" />
+            </svg>
+          </button>
           <button (click)="theme.toggleTheme()" [title]="theme.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
                   class="p-1.5 rounded-md text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
             <svg *ngIf="!theme.isDark()" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,6 +158,7 @@ import { ThemeService } from '../../core/services/theme.service';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </button>
+          </div>
         </div>
       </div>
     </aside>
@@ -156,4 +166,29 @@ import { ThemeService } from '../../core/services/theme.service';
 })
 export class SidebarComponent {
   theme = inject(ThemeService);
+  auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  hasAnyRole(...roles: Rol[]): boolean {
+    const role = this.auth.sesion()?.usuario.rol;
+    return !!role && roles.includes(role);
+  }
+
+  get currentUserName(): string {
+    return this.auth.sesion()?.usuario.nombre ?? 'Usuario';
+  }
+
+  get currentUserRole(): string {
+    const role = this.auth.sesion()?.usuario.rol;
+    return role ? role.charAt(0) + role.slice(1).toLowerCase() : '';
+  }
+
+  get initials(): string {
+    return this.currentUserName.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('');
+  }
+
+  logout(): void {
+    this.auth.clearSession();
+    void this.router.navigate(['/login']);
+  }
 }

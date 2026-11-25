@@ -52,11 +52,13 @@ export class LoginPage {
       .login(usuario.trim(), password)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: () => {
+        next: (session) => {
           const redirectUrl = this.route.snapshot.queryParamMap.get('volver');
           const destination = redirectUrl?.startsWith('/') && !redirectUrl.startsWith('//')
             ? redirectUrl
-            : '/clientes';
+            : session.usuario.rol === 'ADMIN' || session.usuario.rol === 'SUPERVISOR'
+              ? '/dashboard'
+              : '/clientes';
           void this.router.navigateByUrl(destination);
         },
         error: (err) => {
