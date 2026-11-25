@@ -1,287 +1,393 @@
-<a routerLink="/clientes" class="back-link">← Volver a clientes</a>
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-@if (errorMessage()) {
-  <p class="error notice" role="alert">{{ errorMessage() }}</p>
-}
-@if (successMessage()) {
-  <p class="success notice" role="status">{{ successMessage() }}</p>
-}
-@if (isLoading()) {
-  <p role="status">Consultando detalle…</p>
-}
-
-@if (clientDetail(); as c) {
-  <div class="heading-row">
-    <div>
-      <p class="eyebrow">FICHA DEL CLIENTE</p>
-      <h1>{{ c.nombres }}</h1>
-      <p class="lead">{{ c.tipoDocumento }} {{ c.documento }} · Código {{ c.id }}</p>
-    </div>
-    <div class="actions">
-      <button class="secondary" (click)="openEditModal()">Editar datos</button>
-      @if (authService.sesion()?.usuario?.rol === 'ADMIN') {
-        <button class="danger" (click)="isDeleting.set(true)">Eliminar cliente</button>
-      }
-    </div>
+  <div>
+    <a routerLink="/clientes"
+       class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      <span>Volver a la búsqueda de clientes</span>
+    </a>
   </div>
 
-  <section class="panel contact-grid">
-    <div>
-      <span class="muted">Correo electrónico</span>
-      <p>{{ c.email || 'Sin correo registrado' }}</p>
+  @if (errorMessage()) {
+    <div class="p-4 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+      <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ errorMessage() }}</span>
     </div>
-    <div>
-      <span class="muted">Dirección</span>
-      <p>{{ c.direccion || 'Sin dirección registrada' }}</p>
-    </div>
-    <div>
-      <span class="muted">Teléfonos</span>
-      @for (t of c.telefonos; track t.id) {
-        <p>{{ t.numero }} · {{ t.tipo }}</p>
-      } @empty {
-        <p>Sin teléfonos registrados</p>
-      }
-    </div>
-  </section>
-
-  <div class="tabs" role="group" aria-label="Secciones del cliente">
-    @for (t of ['cuentas', 'gestiones', 'pagos', 'promesas']; track t) {
-      <button [class.selected]="activeTab() === t" (click)="activeTab.set($any(t))">{{ t }}</button>
-    }
-  </div>
-
-  <section class="panel">
-    <div class="table-scroll">
-      @if (activeTab() === 'cuentas') {
-        <h2>Cuentas y saldos</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Operación</th>
-              <th>Entidad / producto</th>
-              <th>Asesor</th>
-              <th>Deuda</th>
-              <th>Pagado</th>
-              <th>Saldo</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (x of c.cuentas; track x.id) {
-              <tr>
-                <td>{{ x.numeroOperacion }}</td>
-                <td>{{ x.entidad }}<br><small>{{ x.producto }}</small></td>
-                <td>{{ x.asesorNombre || 'Sin asignar' }}</td>
-                <td>{{ x.deudaTotal | currency:'PEN':'S/ ' }}</td>
-                <td>{{ x.totalPagado | currency:'PEN':'S/ ' }}</td>
-                <td><strong>{{ x.saldo | currency:'PEN':'S/ ' }}</strong></td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="6" class="empty">Este cliente no tiene cuentas registradas.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-
-      @if (activeTab() === 'gestiones') {
-        <h2>Historial de gestiones</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Operación</th>
-              <th>Resultado</th>
-              <th>Observación</th>
-              <th>Asesor</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (x of c.gestiones; track x.id) {
-              <tr>
-                <td>{{ x.fechaHora | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td>{{ x.numeroOperacion }}</td>
-                <td>{{ x.nivel1 }} / {{ x.nivel2 }}</td>
-                <td>{{ x.observacion }}</td>
-                <td>{{ x.asesorNombre }}</td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="5" class="empty">No hay gestiones registradas.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-
-      @if (activeTab() === 'pagos') {
-        <h2>Pagos registrados</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Operación</th>
-              <th>Referencia</th>
-              <th>Monto</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (x of c.pagos; track x.id) {
-              <tr>
-                <td>{{ x.fechaPago | date:'dd/MM/yyyy' }}</td>
-                <td>{{ x.numeroOperacion }}</td>
-                <td>{{ x.referencia }}</td>
-                <td>{{ x.monto | currency:'PEN':'S/ ' }}</td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="4" class="empty">No hay pagos registrados.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-
-      @if (activeTab() === 'promesas') {
-        <h2>Promesas de pago</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha de compromiso</th>
-              <th>Operación</th>
-              <th>Estado</th>
-              <th>Monto</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (x of c.promesas; track x.id) {
-              <tr>
-                <td>{{ x.fechaCompromiso | date:'dd/MM/yyyy' }}</td>
-                <td>{{ x.numeroOperacion }}</td>
-                <td>{{ x.estado }}</td>
-                <td>{{ x.monto | currency:'PEN':'S/ ' }}</td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="4" class="empty">No hay promesas registradas.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-    </div>
-  </section>
-
-  @if (authService.sesion()?.usuario?.rol === 'ASESOR' && c.cuentas.length) {
-    <section class="panel">
-      <h2>Registrar gestión</h2>
-      <form [formGroup]="managementForm" (ngSubmit)="submitManagement()">
-        <div class="form-grid">
-          <div>
-            <label for="cuenta">Cuenta</label>
-            <select id="cuenta" formControlName="cuentaId">
-              <option [ngValue]="null">Selecciona una cuenta</option>
-              @for (x of c.cuentas; track x.id) {
-                <option [ngValue]="x.id">{{ x.numeroOperacion }}</option>
-              }
-            </select>
-          </div>
-          <div>
-            <label for="telefono">Teléfono utilizado</label>
-            <input id="telefono" formControlName="telefono" maxlength="20">
-            @if (managementForm.controls.telefono.touched && managementForm.controls.telefono.invalid) {
-              <small class="error">Ingresa un teléfono válido de 6 a 20 caracteres.</small>
-            }
-          </div>
-          <div>
-            <label for="n1">Tipo de contacto</label>
-            <select id="n1" [value]="selectedLevel1Id()" (change)="onLevel1Change($any($event.target).value)">
-              <option value="0">Selecciona un tipo</option>
-              @for (n of typifications(); track n.id) {
-                <option [value]="n.id">{{ n.nombre }}</option>
-              }
-            </select>
-          </div>
-          <div>
-            <label for="n2">Resultado</label>
-            <select id="n2" formControlName="tipificacionN2Id" (change)="updateValidationRules()">
-              <option [ngValue]="null">Selecciona un resultado</option>
-              @for (n of getLevel2Options(); track n.id) {
-                <option [ngValue]="n.id">{{ n.nombre }}</option>
-              }
-            </select>
-          </div>
-        </div>
-
-        @if (requiresCommitment()) {
-          <div class="form-grid">
-            <div>
-              <label for="fecha">Fecha de compromiso</label>
-              <input id="fecha" type="date" formControlName="fechaCompromiso">
-            </div>
-            <div>
-              <label for="monto">Monto comprometido</label>
-              <input id="monto" type="number" min="0.01" step="0.01" formControlName="montoCompromiso">
-            </div>
-          </div>
-        }
-
-        <label for="observacion">Observación</label>
-        <textarea id="observacion" formControlName="observacion" maxlength="500" rows="3"></textarea>
-        @if (managementForm.controls.observacion.touched && managementForm.controls.observacion.invalid) {
-          <small class="error">Describe la gestión (hasta 500 caracteres).</small>
-        }
-
-        @if (managementErrorMessage()) {
-          <p class="error" role="alert">{{ managementErrorMessage() }}</p>
-        }
-        <div class="actions">
-          <button type="submit" [disabled]="managementForm.invalid || isBusy()">
-            {{ isBusy() ? 'Guardando…' : 'Registrar gestión' }}
-          </button>
-        </div>
-      </form>
-    </section>
   }
 
-  @if (isEditing()) {
-    <div class="modal-backdrop">
-      <section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="editar-titulo">
-        <h2 id="editar-titulo">Editar datos de contacto</h2>
-        <form [formGroup]="editForm" (ngSubmit)="saveContactDetails()">
-          <label for="editar-nombre">Nombres y apellidos</label>
-          <input id="editar-nombre" formControlName="nombres" maxlength="150">
-          <label for="editar-correo">Correo electrónico</label>
-          <input id="editar-correo" type="email" formControlName="email" maxlength="150">
-          @if (editForm.controls.email.touched && editForm.controls.email.invalid) {
-            <small class="error">Ingresa un correo válido.</small>
+  @if (successMessage()) {
+    <div class="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
+      <svg class="w-4 h-4 shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      <span>{{ successMessage() }}</span>
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="p-12 text-center text-xs text-slate-400">
+      <div class="inline-block animate-spin w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full mb-2"></div>
+      <p>Cargando información del deudor…</p>
+    </div>
+  }
+
+  @if (clientDetail(); as c) {
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-6 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Ficha Integral</span>
+          <span class="text-xs text-slate-400">·</span>
+          <span class="text-xs font-mono text-slate-500">{{ c.tipoDocumento }}: {{ c.documento }}</span>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-1">
+          {{ c.nombres }}
+        </h1>
+        <p class="text-xs text-slate-500 mt-0.5">Código de cliente interno #{{ c.id }}</p>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <button (click)="openEditModal()"
+                class="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold shadow-subtle transition-colors flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span>Editar Datos</span>
+        </button>
+
+        @if (authService.sesion()?.usuario?.rol === 'ADMIN') {
+          <button (click)="isDeleting.set(true)"
+                  class="px-3.5 py-2 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 text-xs font-semibold shadow-subtle transition-colors flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Eliminar</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
+        <span class="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1">Correo Electrónico</span>
+        <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">{{ c.email || 'Sin correo registrado' }}</p>
+      </div>
+
+      <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
+        <span class="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1">Dirección Domiciliaria</span>
+        <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">{{ c.direccion || 'Sin dirección registrada' }}</p>
+      </div>
+
+      <div class="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
+        <span class="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1">Teléfonos de Contacto</span>
+        <div class="space-y-1">
+          @for (t of c.telefonos; track t.id) {
+            <p class="text-xs font-mono font-semibold text-slate-800 dark:text-slate-200">
+              {{ t.numero }} <span class="text-[11px] font-sans font-normal text-slate-400">({{ t.tipo }})</span>
+            </p>
+          } @empty {
+            <p class="text-xs text-slate-400">Sin teléfonos registrados</p>
           }
-          <label for="editar-direccion">Dirección</label>
-          <input id="editar-direccion" formControlName="direccion" maxlength="300">
-          @if (errorMessage()) {
-            <p class="error" role="alert">{{ errorMessage() }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="border border-slate-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-subtle overflow-hidden">
+      <div class="px-5 py-3 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center gap-2 overflow-x-auto">
+        @for (t of ['cuentas', 'gestiones', 'pagos', 'promesas']; track t) {
+          <button (click)="activeTab.set($any(t))"
+                  [class]="activeTab() === t ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                  class="px-3.5 py-1.5 rounded-lg text-xs capitalize transition-all">
+            {{ t }}
+          </button>
+        }
+      </div>
+
+      <div class="p-5">
+        @if (activeTab() === 'cuentas') {
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <th class="py-2.5 px-3">Operación</th>
+                  <th class="py-2.5 px-3">Entidad / Producto</th>
+                  <th class="py-2.5 px-3">Asesor Asignado</th>
+                  <th class="py-2.5 px-3 text-right">Deuda Inicial</th>
+                  <th class="py-2.5 px-3 text-right">Amortizado</th>
+                  <th class="py-2.5 px-3 text-right">Saldo Actual</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                @for (x of c.cuentas; track x.id) {
+                  <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/30">
+                    <td class="py-2.5 px-3 font-mono font-bold text-slate-900 dark:text-slate-100">{{ x.numeroOperacion }}</td>
+                    <td class="py-2.5 px-3">
+                      <div class="font-semibold">{{ x.entidad }}</div>
+                      <div class="text-[11px] text-slate-400">{{ x.producto }}</div>
+                    </td>
+                    <td class="py-2.5 px-3">{{ x.asesorNombre || 'Sin asignar' }}</td>
+                    <td class="py-2.5 px-3 text-right font-mono">{{ x.deudaTotal | currency:'PEN':'S/ ' }}</td>
+                    <td class="py-2.5 px-3 text-right font-mono text-emerald-600 font-medium">{{ x.totalPagado | currency:'PEN':'S/ ' }}</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-rose-600 dark:text-rose-400">{{ x.saldo | currency:'PEN':'S/ ' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="py-8 text-center text-slate-400">Este cliente no registra operaciones ni cuentas asociadas.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (activeTab() === 'gestiones') {
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <th class="py-2.5 px-3">Fecha y Hora</th>
+                  <th class="py-2.5 px-3">Operación</th>
+                  <th class="py-2.5 px-3">Tipificación (N1 / N2)</th>
+                  <th class="py-2.5 px-3">Observaciones</th>
+                  <th class="py-2.5 px-3">Asesor</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                @for (x of c.gestiones; track x.id) {
+                  <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/30">
+                    <td class="py-2.5 px-3 font-mono text-slate-500 whitespace-nowrap">{{ x.fechaHora | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="py-2.5 px-3 font-mono font-semibold">{{ x.numeroOperacion }}</td>
+                    <td class="py-2.5 px-3 font-medium text-slate-900 dark:text-slate-100">{{ x.nivel1 }} / {{ x.nivel2 }}</td>
+                    <td class="py-2.5 px-3 max-w-xs truncate text-slate-600 dark:text-slate-400">{{ x.observacion }}</td>
+                    <td class="py-2.5 px-3 whitespace-nowrap">{{ x.asesorNombre }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="py-8 text-center text-slate-400">No hay gestiones registradas para este cliente.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (activeTab() === 'pagos') {
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <th class="py-2.5 px-3">Fecha Abono</th>
+                  <th class="py-2.5 px-3">Operación</th>
+                  <th class="py-2.5 px-3">Referencia Bancaria</th>
+                  <th class="py-2.5 px-3 text-right">Monto Pagado</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                @for (x of c.pagos; track x.id) {
+                  <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/30">
+                    <td class="py-2.5 px-3 font-mono text-slate-500">{{ x.fechaPago | date:'dd/MM/yyyy' }}</td>
+                    <td class="py-2.5 px-3 font-mono font-semibold">{{ x.numeroOperacion }}</td>
+                    <td class="py-2.5 px-3 font-mono text-slate-600 dark:text-slate-400">{{ x.referencia }}</td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{{ x.monto | currency:'PEN':'S/ ' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="py-8 text-center text-slate-400">No hay pagos registrados para este cliente.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (activeTab() === 'promesas') {
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-100 dark:border-slate-800 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <th class="py-2.5 px-3">Fecha Compromiso</th>
+                  <th class="py-2.5 px-3">Operación</th>
+                  <th class="py-2.5 px-3">Estado</th>
+                  <th class="py-2.5 px-3 text-right">Monto Acordado</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                @for (x of c.promesas; track x.id) {
+                  <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/30">
+                    <td class="py-2.5 px-3 font-mono text-slate-500">{{ x.fechaCompromiso | date:'dd/MM/yyyy' }}</td>
+                    <td class="py-2.5 px-3 font-mono font-semibold">{{ x.numeroOperacion }}</td>
+                    <td class="py-2.5 px-3">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono"
+                            [class]="x.estado === 'CUMPLIDA' ? 'bg-emerald-50 text-emerald-700' : x.estado === 'PENDIENTE' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'">
+                        {{ x.estado }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-slate-100">{{ x.monto | currency:'PEN':'S/ ' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="py-8 text-center text-slate-400">No hay compromisos ni promesas registradas.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (authService.sesion()?.usuario?.rol === 'ASESOR' && c.cuentas.length) {
+      <div class="p-6 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle space-y-4">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+          Registrar Nueva Gestión de Cobranza
+        </h3>
+
+        <form [formGroup]="managementForm" (ngSubmit)="submitManagement()" class="space-y-4 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label for="cuenta" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Cuenta / Operación *</label>
+              <select id="cuenta" formControlName="cuentaId"
+                      class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <option [ngValue]="null">Selecciona una cuenta</option>
+                @for (x of c.cuentas; track x.id) {
+                  <option [ngValue]="x.id">{{ x.numeroOperacion }} ({{ x.entidad }})</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label for="telefono" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Teléfono Utilizado *</label>
+              <input id="telefono" formControlName="telefono" maxlength="20" placeholder="Ej. 987112233"
+                     class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+
+            <div>
+              <label for="n1" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de Contacto (N1) *</label>
+              <select id="n1" [value]="selectedLevel1Id()" (change)="onLevel1Change($any($event.target).value)"
+                      class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <option value="0">Selecciona tipo</option>
+                @for (n of typifications(); track n.id) {
+                  <option [value]="n.id">{{ n.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label for="n2" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Resultado (N2) *</label>
+              <select id="n2" formControlName="tipificacionN2Id" (change)="updateValidationRules()"
+                      class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <option [ngValue]="null">Selecciona resultado</option>
+                @for (n of getLevel2Options(); track n.id) {
+                  <option [ngValue]="n.id">{{ n.nombre }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          @if (requiresCommitment()) {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40">
+              <div>
+                <label for="fecha" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Fecha de Compromiso de Pago *</label>
+                <input id="fecha" type="date" formControlName="fechaCompromiso"
+                       class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+              </div>
+
+              <div>
+                <label for="monto" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Monto Comprometido en Soles (S/) *</label>
+                <input id="monto" type="number" min="0.01" step="0.01" formControlName="montoCompromiso" placeholder="0.00"
+                       class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+              </div>
+            </div>
           }
-          <div class="actions">
-            <button class="secondary" type="button" (click)="isEditing.set(false)" [disabled]="isBusy()">Cancelar</button>
-            <button type="submit" [disabled]="editForm.invalid || isBusy()">
-              {{ isBusy() ? 'Guardando…' : 'Guardar cambios' }}
+
+          <div>
+            <label for="observacion" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Observaciones de la Gestión *</label>
+            <textarea id="observacion" formControlName="observacion" maxlength="500" rows="3"
+                      placeholder="Detalle la conversación, acuerdo, justificación o motivo de mora..."
+                      class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+          </div>
+
+          @if (managementErrorMessage()) {
+            <p class="p-2.5 rounded bg-rose-50 text-rose-700 text-xs border border-rose-200" role="alert">{{ managementErrorMessage() }}</p>
+          }
+
+          <div class="flex justify-end pt-1">
+            <button type="submit" [disabled]="managementForm.invalid || isBusy()"
+                    class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-subtle disabled:opacity-50">
+              {{ isBusy() ? 'Guardando…' : 'Registrar Gestión' }}
             </button>
           </div>
         </form>
-      </section>
-    </div>
+      </div>
+    }
+
+    @if (isEditing()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl max-w-lg w-full p-6 text-xs space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">Editar Datos de Contacto</h3>
+            <button (click)="isEditing.set(false)" [disabled]="isBusy()" class="text-slate-400 hover:text-slate-600 text-lg">×</button>
+          </div>
+
+          <form [formGroup]="editForm" (ngSubmit)="saveContactDetails()" class="space-y-4">
+            <div>
+              <label for="editar-nombre" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Nombres y Apellidos *</label>
+              <input id="editar-nombre" formControlName="nombres" maxlength="150"
+                     class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+
+            <div>
+              <label for="editar-correo" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
+              <input id="editar-correo" type="email" formControlName="email" maxlength="150"
+                     class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+
+            <div>
+              <label for="editar-direccion" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Dirección Domiciliaria</label>
+              <input id="editar-direccion" formControlName="direccion" maxlength="300"
+                     class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+              <button type="button" (click)="isEditing.set(false)" [disabled]="isBusy()"
+                      class="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="editForm.invalid || isBusy()"
+                      class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-subtle disabled:opacity-50">
+                {{ isBusy() ? 'Guardando…' : 'Guardar Cambios' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    @if (isDeleting()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 text-xs">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">¿Eliminar Cliente?</h3>
+          <p class="text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+            Se eliminará del padrón a <strong class="text-slate-800 dark:text-slate-200">{{ c.nombres }}</strong> ({{ c.documento }}). El sistema solo permite eliminar clientes que no cuenten con operaciones activas.
+          </p>
+
+          <div class="flex items-center justify-end gap-2.5">
+            <button (click)="isDeleting.set(false)" [disabled]="isBusy()"
+                    class="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold">
+              Cancelar
+            </button>
+            <button (click)="deleteClient()" [disabled]="isBusy()"
+                    class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-subtle">
+              Confirmar Eliminación
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   }
 
-  @if (isDeleting()) {
-    <div class="modal-backdrop">
-      <section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="eliminar-titulo">
-        <h2 id="eliminar-titulo">¿Eliminar cliente?</h2>
-        <p>Se eliminará a <strong>{{ c.nombres }}</strong> ({{ c.documento }}). El servidor solo permite eliminar clientes sin cuentas.</p>
-        <div class="actions">
-          <button class="secondary" (click)="isDeleting.set(false)" [disabled]="isBusy()">Cancelar</button>
-          <button class="danger" (click)="deleteClient()" [disabled]="isBusy()">Confirmar eliminación</button>
-        </div>
-      </section>
-    </div>
-  }
-}
+</div>

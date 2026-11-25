@@ -1,29 +1,72 @@
-<div class="login-wrap">
-  <p class="eyebrow">BIENVENIDO A ESCALL</p>
-  <h1>Inicia tu jornada</h1>
-  <p class="lead">Accede con tu usuario para gestionar tu cartera.</p>
+<div class="min-h-[80vh] flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
 
-  <form class="panel" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
-    <h2>Iniciar sesión</h2>
+  <div class="max-w-md w-full space-y-8">
+    <div class="text-center">
+      <div class="w-12 h-12 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold text-xl flex items-center justify-center mx-auto shadow-md">
+        E
+      </div>
+      <span class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mt-4 block">
+        Plataforma Corporativa ESCALL PERÚ
+      </span>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-1">
+        Iniciar Sesión
+      </h1>
+      <p class="text-xs text-slate-500 mt-0.5">
+        Accede con tus credenciales seguras para gestionar la cartera asignada.
+      </p>
+    </div>
 
-    <label for="usuario">Usuario</label>
-    <input id="usuario" formControlName="usuario" autocomplete="username" placeholder="Tu usuario">
-    @if (loginForm.controls.usuario.touched && loginForm.controls.usuario.invalid) {
-      <small class="error">Ingresa tu usuario.</small>
-    }
+    <div class="p-8 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl space-y-6">
+      <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="space-y-4 text-xs">
+        <div>
+          <label for="usuario" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Nombre de Usuario *</label>
+          <input id="usuario"
+                 type="text"
+                 formControlName="usuario"
+                 autocomplete="username"
+                 placeholder="Ej. admin o sgarcia"
+                 class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors" />
+          @if (loginForm.controls.usuario.touched && loginForm.controls.usuario.invalid) {
+            <p class="text-rose-500 text-[11px] mt-1">Por favor ingresa tu nombre de usuario.</p>
+          }
+        </div>
 
-    <label for="password">Contraseña</label>
-    <input id="password" type="password" formControlName="password" autocomplete="current-password" placeholder="Tu contraseña">
-    @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
-      <small class="error">Ingresa tu contraseña.</small>
-    }
+        <div>
+          <label for="password" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Contraseña *</label>
+          <input id="password"
+                 type="password"
+                 formControlName="password"
+                 autocomplete="current-password"
+                 placeholder="Tu contraseña de acceso"
+                 class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors" />
+          @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+            <p class="text-rose-500 text-[11px] mt-1">Por favor ingresa tu contraseña.</p>
+          }
+        </div>
 
-    @if (errorMessage()) {
-      <p class="error" role="alert">{{ errorMessage() }}</p>
-    }
+        @if (errorMessage()) {
+          <div class="p-3 rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
 
-    <button class="full" type="submit" [disabled]="loginForm.invalid || isLoading()">
-      {{ isLoading() ? 'Ingresando…' : 'Ingresar' }}
-    </button>
-  </form>
+        <button type="submit"
+                [disabled]="loginForm.invalid || isLoading()"
+                class="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-subtle disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
+          @if (isLoading()) {
+            <span class="inline-block animate-spin w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full"></span>
+          }
+          <span>{{ isLoading() ? 'Autenticando…' : 'Acceder al CRM' }}</span>
+        </button>
+      </form>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-[11px] text-slate-400">
+        Demo: <strong class="text-slate-600 dark:text-slate-300 font-mono">admin</strong> / <strong class="text-slate-600 dark:text-slate-300 font-mono">Clave12345</strong>
+      </div>
+    </div>
+  </div>
+
 </div>

@@ -1,22 +1,69 @@
-<p class="eyebrow">DISPONIBILIDAD DEL SERVICIO</p>
-<h1>Estado de conexión</h1>
-<p class="lead">Comprueba la comunicación con el servidor antes de comenzar.</p>
+<div class="space-y-6 max-w-4xl mx-auto pb-12">
 
-<section class="panel connection">
-  <div class="connection-icon" aria-hidden="true">↗</div>
-  <h2>Conexión con Spring Boot</h2>
+  <div>
+    <div class="flex items-center gap-2">
+      <span class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Disponibilidad del Servicio</span>
+      <span class="text-xs text-slate-400">·</span>
+      <span class="text-xs text-slate-500 font-mono">Semana 14 - Requisito Académico</span>
+    </div>
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-1">
+      Estado de Conexión REST
+    </h1>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+      Verificación de enlace bidireccional entre el cliente Angular 20 y el backend Spring Boot 4 (`/api/publico/saludo`).
+    </p>
+  </div>
 
-  @if (isLoading()) {
-    <p role="status">Comprobando conexión…</p>
-  }
-  @if (statusMessage()) {
-    <p class="success" role="status">{{ statusMessage() }}</p>
-  }
-  @if (errorMessage()) {
-    <p class="error" role="alert">{{ errorMessage() }}</p>
-  }
+  <div class="p-8 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle flex flex-col items-center text-center space-y-5">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center transition-colors shadow-sm"
+         [class]="statusMessage() ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : errorMessage() ? 'bg-rose-50 text-rose-600 border border-rose-200' : 'bg-slate-100 text-slate-500'">
+      <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        @if (statusMessage()) {
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        } @else if (errorMessage()) {
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        } @else {
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        }
+      </svg>
+    </div>
 
-  <button (click)="checkConnection()" [disabled]="isLoading()">
-    Comprobar nuevamente
-  </button>
-</section>
+    <div>
+      <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">
+        Endpoint Público Spring Boot: <span class="font-mono text-indigo-600 dark:text-indigo-400">/api/publico/saludo</span>
+      </h3>
+      <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+        Comprueba que la API REST responde correctamente sin requerir token JWT, confirmando que el backend está en línea.
+      </p>
+    </div>
+
+    @if (isLoading()) {
+      <div class="flex items-center gap-2 text-xs text-slate-500">
+        <span class="inline-block animate-spin w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full"></span>
+        <span>Comprobando conexión con el servidor…</span>
+      </div>
+    }
+
+    @if (statusMessage()) {
+      <div class="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs font-mono font-semibold max-w-lg w-full">
+        ✓ {{ statusMessage() }}
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="p-4 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs max-w-lg w-full">
+        ✗ {{ errorMessage() }}
+      </div>
+    }
+
+    <button (click)="checkConnection()"
+            [disabled]="isLoading()"
+            class="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-subtle disabled:opacity-50 flex items-center gap-2 transition-all">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      <span>Comprobar Nuevamente</span>
+    </button>
+  </div>
+
+</div>

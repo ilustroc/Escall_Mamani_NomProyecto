@@ -1,157 +1,283 @@
-<p class="eyebrow">INTEGRACIÓN DE DATOS</p>
-<h1>Importación de archivos</h1>
-<p class="lead">Carga asignaciones de cartera o pagos y revisa el resultado de cada fila.</p>
+<div class="space-y-6 max-w-7xl mx-auto pb-12">
 
-<section class="panel">
-  <div class="section-heading">
-    <h2>Preparar carga</h2>
-    <button class="secondary" (click)="downloadTemplate()" [disabled]="isProcessing()">
-      Descargar plantilla CSV
-    </button>
-  </div>
-
-  <label for="carga-tipo">Tipo de carga</label>
-  <select id="carga-tipo" [value]="batchType()" (change)="changeBatchType($any($event.target).value)" [disabled]="isProcessing()">
-    <option value="asignaciones">Asignaciones de cartera</option>
-    <option value="pagos">Pagos</option>
-  </select>
-
-  @if (batchType() === 'asignaciones') {
-    <p class="muted">
-      Columnas obligatorias: documento, nombres, numero_operacion, entidad, producto, cartera, cosecha, deuda, dias_mora y asesor (nombre de usuario activo). El documento identifica al cliente; una operación existente actualiza sus datos y puede cambiar de asesor.
-    </p>
-  } @else {
-    <p class="muted">
-      Columnas obligatorias: numero_operacion, fecha_pago y monto. Referencia es opcional. La operación debe existir; la fecha no puede ser futura y el monto debe ser mayor que cero.
-    </p>
-  }
-
-  <label for="carga-archivo">Archivo CSV o TXT</label>
-  <input #fileInput id="carga-archivo" type="file" accept=".csv,.txt,text/csv,text/plain" (change)="onFileSelected($event)" [disabled]="isProcessing()">
-  <p class="muted">
-    UTF-8 · separador punto y coma o coma · máximo 10 MB y 20 000 filas. Desde Excel, guarda como CSV UTF-8. Para los decimales usa punto; fecha de pago AAAA-MM-DD.
-  </p>
-
-  @if (selectedFile(); as f) {
-    <p>Archivo seleccionado: <strong>{{ f.name }}</strong> · {{ (f.size / 1024).toFixed(1) }} KB</p>
-  }
-
-  @if (errorMessage()) {
-    <p class="error" role="alert">{{ errorMessage() }}</p>
-  }
-
-  <p class="muted">Las filas válidas se guardan y las rechazadas se informan por separado. Revisa el archivo antes de importarlo.</p>
-
-  <div class="actions">
-    <button class="secondary" (click)="clearSelection()" [disabled]="isProcessing()">Limpiar selección</button>
-    <button (click)="importBatch()" [disabled]="!selectedFile() || isProcessing()">
-      {{ isProcessing() ? 'Procesando archivo…' : 'Importar archivo' }}
-    </button>
-  </div>
-</section>
-
-@if (importResult(); as r) {
-  <section class="panel" aria-labelledby="resultado-carga">
-    <h2 id="resultado-carga">Resultado de la importación</h2>
-    <p role="status">Carga #{{ r.id }} completada: {{ r.aceptados }} aceptados y {{ r.rechazados }} rechazados de {{ r.total }} filas.</p>
-    <div class="metrics carga-metrics">
-      <section>
-        <span>Total de filas</span>
-        <strong>{{ r.total }}</strong>
-      </section>
-      <section>
-        <span>Aceptadas</span>
-        <strong>{{ r.aceptados }}</strong>
-      </section>
-      <section>
-        <span>Rechazadas</span>
-        <strong>{{ r.rechazados }}</strong>
-      </section>
-    </div>
-    @if (r.errores.length) {
-      <h3>Filas rechazadas</h3>
-      <ul class="error-list">
-        @for (e of r.errores; track $index) {
-          <li>{{ e }}</li>
-        }
-      </ul>
-    } @else {
-      <p class="success">Todas las filas se procesaron correctamente.</p>
-    }
-  </section>
-}
-
-<section class="panel">
-  <div class="section-heading">
-    <h2>Historial de cargas</h2>
-    <button class="secondary" (click)="loadHistory()" [disabled]="isHistoryLoading() || isProcessing()">
-      Actualizar historial
-    </button>
-  </div>
-
-  @if (historyErrorMessage()) {
-    <p class="error" role="alert">{{ historyErrorMessage() }}</p>
-  }
-
-  @if (isHistoryLoading()) {
-    <p role="status">Consultando cargas…</p>
-  } @else {
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Archivo / tipo</th>
-            <th>Usuario</th>
-            <th>Aceptados</th>
-            <th>Rechazados</th>
-            <th>Detalle</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (c of batchHistory(); track c.id) {
-            <tr>
-              <td>{{ c.creadoEn | date:'dd/MM/yyyy HH:mm' }}</td>
-              <td>{{ c.nombreArchivo }}<br><small>{{ c.tipo }}</small></td>
-              <td>{{ c.usuario }}</td>
-              <td>{{ c.aceptados }}</td>
-              <td>{{ c.rechazados }}</td>
-              <td>
-                <button class="secondary" (click)="selectedDetail.set(c)" [attr.aria-label]="'Ver carga ' + c.id">
-                  Ver resultado
-                </button>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="empty">Todavía no se han importado archivos.</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    <p class="muted">Se muestran las últimas 20 cargas.</p>
-  }
-</section>
-
-@if (selectedDetail(); as c) {
-  <div class="modal-backdrop">
-    <section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="historial-detalle">
-      <h2 id="historial-detalle">Detalle de carga #{{ c.id }}</h2>
-      <p>{{ c.nombreArchivo }} · {{ c.tipo }}</p>
-      <p>{{ c.total }} filas: {{ c.aceptados }} aceptadas y {{ c.rechazados }} rechazadas.</p>
-      @if (c.errores.length) {
-        <ul class="error-list">
-          @for (e of c.errores; track $index) {
-            <li>{{ e }}</li>
-          }
-        </ul>
-      } @else {
-        <p class="success">No se registraron rechazos.</p>
-      }
-      <div class="actions">
-        <button (click)="selectedDetail.set(null)">Cerrar detalle</button>
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Integración de Datos</span>
+        <span class="text-xs text-slate-400">·</span>
+        <span class="text-xs text-slate-500 font-mono">Procesamiento por Lotes</span>
       </div>
-    </section>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-1">
+        Importación Masiva de Archivos
+      </h1>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        Carga masiva de asignaciones de cartera o abonos bancarios con validación por fila y bitácora de errores.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <button (click)="downloadTemplate()" [disabled]="isProcessing()"
+              class="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold shadow-subtle flex items-center gap-1.5 transition-all">
+        <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        <span>Descargar Plantilla CSV</span>
+      </button>
+    </div>
   </div>
-}
+
+  <div class="p-6 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle space-y-5">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+      <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+        Configuración de Carga por Lote
+      </h3>
+      <span class="text-xs text-slate-400">Formato: UTF-8 (.csv, .txt)</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+      <div>
+        <label for="carga-tipo" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de Lote a Procesar *</label>
+        <select id="carga-tipo"
+                [value]="batchType()"
+                (change)="changeBatchType($any($event.target).value)"
+                [disabled]="isProcessing()"
+                class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium">
+          <option value="asignaciones">Asignaciones de Cartera y Deudores</option>
+          <option value="pagos">Pagos y Recaudaciones Bancarias</option>
+        </select>
+      </div>
+
+      <div class="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
+        @if (batchType() === 'asignaciones') {
+          <strong class="text-slate-800 dark:text-slate-200 block mb-0.5">Estructura para Asignaciones:</strong>
+          documento, nombres, numero_operacion, entidad, producto, cartera, cosecha, deuda, dias_mora, asesor.
+        } @else {
+          <strong class="text-slate-800 dark:text-slate-200 block mb-0.5">Estructura para Pagos:</strong>
+          numero_operacion, fecha_pago (AAAA-MM-DD), monto, referencia (opcional).
+        }
+      </div>
+    </div>
+
+    <div>
+      <label for="carga-archivo" class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Seleccionar Archivo de Datos *</label>
+      <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 text-center hover:border-indigo-400 transition-colors">
+        <input #fileInput id="carga-archivo" type="file" accept=".csv,.txt,text/csv,text/plain" (change)="onFileSelected($event)" [disabled]="isProcessing()" class="hidden" />
+        <label for="carga-archivo" class="cursor-pointer flex flex-col items-center justify-center gap-2">
+          <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          </div>
+          <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Haz clic para buscar tu archivo</span>
+          <span class="text-[11px] text-slate-400">Archivos CSV o TXT delimitados por comas o punto y coma (máx. 10MB)</span>
+        </label>
+      </div>
+    </div>
+
+    @if (selectedFile(); as f) {
+      <div class="p-3.5 rounded-lg bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/40 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span class="font-semibold text-slate-800 dark:text-slate-200">{{ f.name }}</span>
+          <span class="text-slate-400 font-mono">({{ (f.size / 1024).toFixed(1) }} KB)</span>
+        </div>
+        <button (click)="clearSelection()" [disabled]="isProcessing()" class="text-xs text-rose-600 hover:underline font-semibold">
+          Quitar archivo
+        </button>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="p-4 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+        <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <div class="flex items-center justify-end gap-2.5 pt-2">
+      <button (click)="clearSelection()" [disabled]="!selectedFile() || isProcessing()"
+              class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold disabled:opacity-40">
+        Limpiar
+      </button>
+
+      <button (click)="importBatch()" [disabled]="!selectedFile() || isProcessing()"
+              class="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-subtle disabled:opacity-50 flex items-center gap-2">
+        @if (isProcessing()) {
+          <span class="inline-block animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full"></span>
+        }
+        <span>{{ isProcessing() ? 'Procesando archivo…' : 'Procesar e Importar' }}</span>
+      </button>
+    </div>
+  </div>
+
+  @if (importResult(); as r) {
+    <div class="p-6 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle space-y-4 animate-fade-in">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full" [class]="r.rechazados > 0 ? 'bg-amber-500' : 'bg-emerald-500'"></span>
+          Resumen de Carga Lote #{{ r.id }}
+        </h3>
+        <span class="text-xs font-mono text-slate-400">{{ r.tipo }}</span>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div class="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 text-center">
+          <span class="text-[11px] uppercase tracking-wider text-slate-400 font-medium block">Total Filas</span>
+          <p class="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100 mt-1">{{ r.total }}</p>
+        </div>
+
+        <div class="p-4 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/40 text-center">
+          <span class="text-[11px] uppercase tracking-wider text-emerald-600 font-medium block">Aceptadas</span>
+          <p class="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">{{ r.aceptados }}</p>
+        </div>
+
+        <div class="p-4 rounded-lg bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/40 text-center">
+          <span class="text-[11px] uppercase tracking-wider text-rose-600 font-medium block">Rechazadas</span>
+          <p class="text-2xl font-bold font-mono text-rose-600 dark:text-rose-400 mt-1">{{ r.rechazados }}</p>
+        </div>
+      </div>
+
+      @if (r.errores.length) {
+        <div class="space-y-2 pt-2">
+          <h4 class="text-xs font-bold text-rose-600 dark:text-rose-400">Observaciones y Filas Rechazadas:</h4>
+          <ul class="space-y-1 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-200 dark:border-slate-800 max-h-48 overflow-y-auto">
+            @for (e of r.errores; track $index) {
+              <li class="flex items-start gap-2">
+                <span class="text-rose-500 font-bold">•</span>
+                <span>{{ e }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      } @else {
+        <div class="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>El 100% de las filas se procesó y concilió satisfactoriamente.</span>
+        </div>
+      }
+    </div>
+  }
+
+  <div class="border border-slate-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-subtle overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">Historial de Lotes Procesados</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Registro de importaciones masivas anteriores con detalle de aceptación.</p>
+      </div>
+      <button (click)="loadHistory()" [disabled]="isHistoryLoading() || isProcessing()"
+              class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold shadow-sm transition-colors">
+        Actualizar Historial
+      </button>
+    </div>
+
+    @if (historyErrorMessage()) {
+      <div class="p-4 bg-rose-50 text-rose-700 text-xs border-b border-rose-200">{{ historyErrorMessage() }}</div>
+    }
+
+    @if (isHistoryLoading()) {
+      <div class="p-12 text-center text-xs text-slate-400">
+        <div class="inline-block animate-spin w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full mb-2"></div>
+        <p>Consultando historial de cargas…</p>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <th class="py-3 px-4">Fecha & Hora</th>
+              <th class="py-3 px-4">Archivo / Lote</th>
+              <th class="py-3 px-4">Usuario</th>
+              <th class="py-3 px-4 text-center">Aceptados</th>
+              <th class="py-3 px-4 text-center">Rechazados</th>
+              <th class="py-3 px-4 text-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+            @for (c of batchHistory(); track c.id) {
+              <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">{{ c.creadoEn | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td class="py-3 px-4">
+                  <div class="font-semibold text-slate-900 dark:text-slate-100">{{ c.nombreArchivo }}</div>
+                  <div class="text-[11px] font-mono text-indigo-600 uppercase">{{ c.tipo }}</div>
+                </td>
+                <td class="py-3 px-4">{{ c.usuario }}</td>
+                <td class="py-3 px-4 text-center font-mono font-bold text-emerald-600">{{ c.aceptados }}</td>
+                <td class="py-3 px-4 text-center font-mono font-bold" [class]="c.rechazados > 0 ? 'text-rose-600' : 'text-slate-400'">{{ c.rechazados }}</td>
+                <td class="py-3 px-4 text-center">
+                  <button (click)="selectedDetail.set(c)"
+                          class="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium transition-colors">
+                    Ver Resultado
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="py-10 text-center text-slate-400">Todavía no se han importado archivos en este entorno.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  @if (selectedDetail(); as c) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl max-w-lg w-full p-6 text-xs space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <span class="text-[10px] font-mono font-bold uppercase text-indigo-600">{{ c.tipo }}</span>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">Detalle de Lote #{{ c.id }}</h3>
+          </div>
+          <button (click)="selectedDetail.set(null)" class="text-slate-400 hover:text-slate-600 text-lg">×</button>
+        </div>
+
+        <div class="space-y-2 p-3.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Archivo:</span>
+            <span class="font-mono font-semibold">{{ c.nombreArchivo }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Total Filas:</span>
+            <span class="font-mono font-bold">{{ c.total }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Aceptadas:</span>
+            <span class="font-mono font-bold text-emerald-600">{{ c.aceptados }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Rechazadas:</span>
+            <span class="font-mono font-bold text-rose-600">{{ c.rechazados }}</span>
+          </div>
+        </div>
+
+        @if (c.errores.length) {
+          <div class="space-y-1">
+            <span class="font-semibold text-rose-600 block">Errores Registrados:</span>
+            <ul class="space-y-1 text-slate-600 dark:text-slate-400 max-h-40 overflow-y-auto bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded border border-slate-200 dark:border-slate-800 text-[11px]">
+              @for (e of c.errores; track $index) {
+                <li>• {{ e }}</li>
+              }
+            </ul>
+          </div>
+        } @else {
+          <p class="text-emerald-600 font-medium">No se registraron rechazos ni errores durante el procesamiento.</p>
+        }
+
+        <div class="flex justify-end pt-2">
+          <button (click)="selectedDetail.set(null)" class="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-semibold shadow-subtle">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>
