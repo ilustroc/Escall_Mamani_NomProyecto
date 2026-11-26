@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CarteraService } from './services/cartera.service';
 import { Debtor, MoraSegment, DebtStatus } from '../../core/models/debtor.types';
 import { CurrencyPenPipe } from '../../shared/pipes/currency-pen.pipe';
@@ -137,7 +138,7 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
               </tr>
 
               <tr *ngFor="let debtor of cartera.filteredDebtors()"
-                  (click)="cartera.openDebtorDrawer(debtor)"
+                  (click)="navigateToDebtor(debtor)"
                   class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 cursor-pointer transition-colors group">
 
                 <td class="px-4 py-3.5">
@@ -210,10 +211,19 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
                     </a>
 
                     <button
-                      (click)="cartera.openDebtorDrawer(debtor)"
-                      class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 font-semibold transition-colors flex items-center gap-1">
-                      <span>Gestionar</span>
-                      <span class="text-[10px]">›</span>
+                      (click)="navigateToDebtor(debtor); $event.stopPropagation()"
+                      class="px-2.5 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 font-semibold text-xs transition-colors flex items-center gap-1 shadow-sm">
+                      <span>Ficha</span>
+                      <span class="text-[10px]">→</span>
+                    </button>
+
+                    <button
+                      (click)="cartera.openDebtorDrawer(debtor); $event.stopPropagation()"
+                      title="Abrir panel lateral rápido"
+                      class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                      </svg>
                     </button>
                   </div>
                 </td>
@@ -238,6 +248,11 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
 })
 export class CarteraComponent {
   cartera = inject(CarteraService);
+  private router = inject(Router);
+
+  navigateToDebtor(debtor: Debtor): void {
+    void this.router.navigate(['/clientes', debtor.documentNumber]);
+  }
 
   moraSegments: { id: MoraSegment; label: string; count?: number }[] = [
     { id: 'TODOS', label: 'Todos' },

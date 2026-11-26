@@ -41,7 +41,9 @@ export interface Cuenta {
   entidad: string;
   producto: string;
   cartera: string;
+  cosecha?: string;
   deudaTotal: number;
+  diasMora?: number;
   totalPagado: number;
   saldo: number;
   asesorNombre: string;
@@ -51,11 +53,14 @@ export interface Gestion {
   id: number;
   fechaHora: string;
   numeroOperacion: string;
+  cartera?: string;
   telefono: string;
   nivel1: string;
   nivel2: string;
   observacion: string;
   asesorNombre: string;
+  fechaCompromiso?: string | null;
+  montoCompromiso?: number | null;
 }
 
 export interface Pago {
@@ -64,6 +69,8 @@ export interface Pago {
   monto: number;
   referencia: string;
   numeroOperacion: string;
+  cartera?: string;
+  asesorNombre?: string;
 }
 
 export interface Promesa {
@@ -72,6 +79,8 @@ export interface Promesa {
   monto: number;
   estado: string;
   numeroOperacion: string;
+  asesorNombre?: string;
+  cartera?: string;
 }
 
 export interface Telefono {

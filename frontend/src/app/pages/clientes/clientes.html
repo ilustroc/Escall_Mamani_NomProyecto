@@ -30,30 +30,59 @@
 
   <div class="p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-subtle">
     <form [formGroup]="searchForm" (ngSubmit)="search()" class="space-y-3">
-      <label for="busqueda" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-        Buscar Cliente o Deudor
-      </label>
+      <div class="flex items-center justify-between">
+        <label for="busqueda" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+          Buscar Cliente o Deudor
+        </label>
+        <span class="text-[11px] text-slate-400">Ingresa DNI, RUC, nombre o número de operación</span>
+      </div>
 
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
         <div class="relative flex-1">
           <input id="busqueda"
                  type="text"
                  formControlName="q"
-                 placeholder="Escribe al menos 3 caracteres (ej. 10293847 o Quispe)..."
+                 placeholder="Ej. 10482914, Jorge Morales, 44920184 o PREST-BBVA..."
                  maxlength="100"
-                 class="w-full text-xs pl-8 pr-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors" />
+                 class="w-full text-xs pl-8 pr-8 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors font-mono" />
           <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
+          @if (searchForm.controls.q.value) {
+            <button type="button"
+                    (click)="searchForm.controls.q.setValue('')"
+                    class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-sm">
+              ✕
+            </button>
+          }
         </div>
 
         <button type="submit"
                 [disabled]="searchForm.invalid || isLoading()"
-                class="px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 text-xs font-semibold shadow-subtle disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
+                class="px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 text-xs font-semibold shadow-subtle disabled:opacity-50 flex items-center justify-center gap-2 transition-all shrink-0">
           @if (isLoading()) {
             <span class="inline-block animate-spin w-3 h-3 border-2 border-white dark:border-slate-900 border-t-transparent rounded-full"></span>
           }
           <span>{{ isLoading() ? 'Buscando…' : 'Buscar' }}</span>
+        </button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5 pt-1 text-[11px] text-slate-500">
+        <span class="text-slate-400">Búsquedas rápidas:</span>
+        <button type="button" (click)="quickSearch('10482914')" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition-colors font-mono">
+          10482914 (Jorge Morales)
+        </button>
+        <button type="button" (click)="quickSearch('44920184')" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition-colors font-mono">
+          44920184 (Juan Mendoza)
+        </button>
+        <button type="button" (click)="quickSearch('10293847')" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition-colors font-mono">
+          10293847 (María Quispe)
+        </button>
+        <button type="button" (click)="quickSearch('BBVA')" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition-colors">
+          BBVA Consumo
+        </button>
+        <button type="button" (click)="quickSearch('BCP')" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 transition-colors">
+          BCP Comercial
         </button>
       </div>
 
@@ -78,8 +107,8 @@
         <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100">Resultados de Búsqueda</h3>
         <p class="text-xs text-slate-500 mt-0.5">Clientes y saldos consolidados correspondientes a tu perfil de acceso.</p>
       </div>
-      <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-        {{ clients().length }} clientes
+      <span class="text-xs font-mono px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+        {{ clients().length }} {{ clients().length === 1 ? 'cliente' : 'clientes' }}
       </span>
     </div>
 
@@ -88,20 +117,25 @@
         <svg class="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <p>Ingresa un documento o nombre en la barra superior para consultar la cartera disponible.</p>
+        <p class="text-slate-600 dark:text-slate-300 font-medium">Consulta un documento, nombre u operación.</p>
+        <p class="text-slate-400 mt-0.5">Usa el buscador o haz clic en las sugerencias rápidas para comenzar.</p>
       </div>
     }
 
     @if (isLoading()) {
       <div class="p-12 text-center text-xs text-slate-400">
         <div class="inline-block animate-spin w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full mb-2"></div>
-        <p>Consultando clientes en el servidor…</p>
+        <p>Consultando clientes en la base de datos…</p>
       </div>
     }
 
     @if (hasSearched() && !clients().length && !isLoading()) {
       <div class="p-12 text-center text-xs text-slate-400">
-        <p>No se encontraron clientes que coincidan con la búsqueda ingresada.</p>
+        <svg class="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-slate-700 dark:text-slate-300 font-medium">No se encontraron clientes que coincidan con la búsqueda ingresada.</p>
+        <p class="text-slate-400 mt-0.5">Prueba buscando por DNI como 10482914 o seleccionando una de las sugerencias.</p>
       </div>
     }
 
@@ -114,40 +148,43 @@
               <th class="py-3 px-4">Cliente / Titular</th>
               <th class="py-3 px-4 text-center">Cuentas</th>
               <th class="py-3 px-4 text-right">Deuda Total</th>
-              <th class="py-3 px-4 text-center">Acción</th>
+              <th class="py-3 px-4 text-right">Acción</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
             @for (c of clients(); track c.id) {
-              <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+              <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
                 <td class="py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                  <span class="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-normal mr-1.5">
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-normal mr-1.5 border border-slate-200 dark:border-slate-700">
                     {{ c.tipoDocumento }}
                   </span>
-                  {{ c.documento }}
+                  <span>{{ c.documento }}</span>
                 </td>
 
                 <td class="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
-                  {{ c.nombres }}
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800/60">
+                      {{ c.nombres.charAt(0) }}
+                    </div>
+                    <span class="group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{ c.nombres }}</span>
+                  </div>
                 </td>
 
                 <td class="py-3 px-4 text-center font-mono">
-                  <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs">
-                    {{ c.cuentas }}
+                  <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs">
+                    {{ c.cuentas }} {{ c.cuentas === 1 ? 'cuenta' : 'cuentas' }}
                   </span>
                 </td>
 
-                <td class="py-3 px-4 text-right font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap tabular-nums">
+                <td class="py-3 px-4 text-right font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap tabular-nums text-sm">
                   {{ c.deudaTotal | currency:'PEN':'S/ ' }}
                 </td>
 
-                <td class="py-3 px-4 text-center whitespace-nowrap">
+                <td class="py-3 px-4 text-right whitespace-nowrap">
                   <a [routerLink]="['/clientes', c.id]"
-                     class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold text-xs shadow-sm transition-colors inline-flex items-center gap-1">
-                    <span>Ver Detalle</span>
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
+                     class="px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 font-semibold text-xs shadow-sm transition-colors inline-flex items-center gap-1.5">
+                    <span>Ver Ficha Completa</span>
+                    <span class="text-[11px]">→</span>
                   </a>
                 </td>
               </tr>
@@ -156,8 +193,9 @@
         </table>
       </div>
 
-      <div class="px-5 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-xs text-slate-500">
-        Mostrando hasta 30 coincidencias de la base de datos de cobranzas.
+      <div class="px-5 py-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-xs text-slate-500 flex items-center justify-between">
+        <span>Mostrando {{ clients().length }} coincidencias en la cartera de cobranzas.</span>
+        <span class="text-slate-400 font-mono text-[11px]">Sincronización en línea</span>
       </div>
     }
   </div>
@@ -200,17 +238,17 @@
           </div>
 
           <div>
-            <label for="nombres" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Nombres y Apellidos Completos *</label>
-            <input id="nombres" formControlName="nombres" maxlength="150" placeholder="Ej. Juan Carlos Quispe Mamani"
+            <label for="nombres" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Nombres y Apellidos *</label>
+            <input id="nombres" formControlName="nombres" maxlength="150" placeholder="Ej. Juan Carlos Pérez Flores"
                    class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             @if (createForm.controls.nombres.touched && createForm.controls.nombres.invalid) {
-              <p class="text-rose-500 text-[11px] mt-1">Ingresa el nombre del cliente.</p>
+              <p class="text-rose-500 text-[11px] mt-1">Ingresa los nombres y apellidos.</p>
             }
           </div>
 
           <div>
-            <label for="email" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico (opcional)</label>
-            <input id="email" type="email" formControlName="email" maxlength="150" placeholder="cliente@correo.com"
+            <label for="email" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Correo Electrónico</label>
+            <input id="email" type="email" formControlName="email" maxlength="150" placeholder="ejemplo@correo.com"
                    class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             @if (createForm.controls.email.touched && createForm.controls.email.invalid) {
               <p class="text-rose-500 text-[11px] mt-1">Ingresa un correo electrónico válido.</p>
@@ -218,23 +256,23 @@
           </div>
 
           <div>
-            <label for="direccion" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Dirección Domiciliaria (opcional)</label>
-            <input id="direccion" formControlName="direccion" maxlength="300" placeholder="Av. Los Jazmines 450, San Isidro, Lima"
+            <label for="direccion" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Dirección Domiciliaria</label>
+            <input id="direccion" formControlName="direccion" maxlength="300" placeholder="Av. Principal 123, Distrito, Ciudad"
                    class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
           </div>
 
           @if (createErrorMessage()) {
-            <p class="p-2.5 rounded bg-rose-50 text-rose-700 text-xs border border-rose-200" role="alert">{{ createErrorMessage() }}</p>
+            <p class="text-rose-500 text-[11px]">{{ createErrorMessage() }}</p>
           }
 
-          <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+          <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
             <button type="button" (click)="isCreateModalOpen.set(false)" [disabled]="isSaving()"
-                    class="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold">
+                    class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
               Cancelar
             </button>
             <button type="submit" [disabled]="createForm.invalid || isSaving()"
-                    class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-subtle disabled:opacity-50">
-              {{ isSaving() ? 'Guardando…' : 'Registrar Cliente' }}
+                    class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold disabled:opacity-50">
+              {{ isSaving() ? 'Guardando…' : 'Crear Cliente' }}
             </button>
           </div>
         </form>

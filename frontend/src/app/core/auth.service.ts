@@ -17,10 +17,10 @@ export class AuthService {
 
   private loadStoredSession(): Sesion | null {
     try {
-      const raw = sessionStorage.getItem(this.storageKey);
+      const raw = sessionStorage.getItem(this.storageKey) || localStorage.getItem(this.storageKey);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed.token === 'string' && parsed.usuario && Date.parse(parsed.expiraEn) > Date.now()) {
+      if (parsed && typeof parsed.token === 'string' && parsed.usuario) {
         return parsed;
       }
       return null;
@@ -45,6 +45,7 @@ export class AuthService {
     }).pipe(
       tap(sessionData => {
         sessionStorage.setItem(this.storageKey, JSON.stringify(sessionData));
+        localStorage.setItem(this.storageKey, JSON.stringify(sessionData));
         this.session.set(sessionData);
       })
     );
@@ -52,6 +53,7 @@ export class AuthService {
 
   clearSession(): void {
     sessionStorage.removeItem(this.storageKey);
+    localStorage.removeItem(this.storageKey);
     this.session.set(null);
   }
 

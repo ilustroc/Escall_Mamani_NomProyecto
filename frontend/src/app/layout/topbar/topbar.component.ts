@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CarteraService } from '../../features/cartera/services/cartera.service';
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -22,10 +23,11 @@ import { ThemeService } from '../../core/services/theme.service';
             type="text"
             [ngModel]="cartera.searchTerm()"
             (ngModelChange)="cartera.setSearch($event)"
+            (keyup.enter)="onSearchEnter()"
             placeholder="Buscar por DNI, RUC, cliente u operación..."
             class="w-full pl-9 pr-8 py-1.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500 transition-all font-sans"
           />
-          <div *ngIf="cartera.searchTerm()" (click)="cartera.setSearch('')" class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-slate-400 hover:text-slate-600">
+          <div *ngIf="cartera.searchTerm()" (click)="clearSearch()" class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-slate-400 hover:text-slate-600">
             <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
             </svg>
@@ -61,4 +63,16 @@ import { ThemeService } from '../../core/services/theme.service';
 export class TopbarComponent {
   cartera = inject(CarteraService);
   theme = inject(ThemeService);
+  private router = inject(Router);
+
+  clearSearch(): void {
+    this.cartera.setSearch('');
+  }
+
+  onSearchEnter(): void {
+    const term = this.cartera.searchTerm().trim();
+    if (term.length >= 3) {
+      void this.router.navigate(['/clientes'], { queryParams: { q: term } });
+    }
+  }
 }

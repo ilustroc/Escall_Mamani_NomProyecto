@@ -24,7 +24,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: unknown) => {
-      if (isApiRequest && !isPublicRequest && error instanceof HttpErrorResponse && error.status === 401) {
+      if (isApiRequest && !isPublicRequest && error instanceof HttpErrorResponse && error.status === 401 && currentSession) {
         authService.clearSession();
         void router.navigate(['/login'], { queryParams: { sesion: 'vencida' } });
       }

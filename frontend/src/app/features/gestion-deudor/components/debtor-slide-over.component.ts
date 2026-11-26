@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CarteraService } from '../../cartera/services/cartera.service';
 import { CurrencyPenPipe } from '../../../shared/pipes/currency-pen.pipe';
 import { StatusBadgeComponent } from '../../../shared/components/badge/status-badge.component';
@@ -38,6 +39,13 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
             <p *ngIf="debtor.legalRepresentative" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Rep: {{ debtor.legalRepresentative }}
             </p>
+            <div class="mt-2.5">
+              <button (click)="goToFullDetail(debtor)"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-sm transition-all">
+                <span>Abrir Ficha Completa en Pantalla Completa</span>
+                <span>→</span>
+              </button>
+            </div>
           </div>
 
           <button (click)="cartera.closeDebtorDrawer()"
@@ -244,6 +252,12 @@ import { StatusBadgeComponent } from '../../../shared/components/badge/status-ba
 })
 export class DebtorSlideOverComponent {
   cartera = inject(CarteraService);
+  private router = inject(Router);
+
+  goToFullDetail(debtor: any): void {
+    this.cartera.closeDebtorDrawer();
+    void this.router.navigate(['/clientes', debtor.documentNumber || debtor.id]);
+  }
 
   newRecord = {
     channel: 'LLAMADA' as const,
