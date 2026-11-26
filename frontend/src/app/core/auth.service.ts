@@ -4,21 +4,6 @@ import { Observable, tap, catchError, of } from 'rxjs';
 import { API_URL } from './api.config';
 import { Sesion } from './models';
 
-const DEFAULT_DEMO_SESSION: Sesion = {
-  token: 'demo-jwt-token-escall-2026',
-  expiraEn: new Date(Date.now() + 86400000 * 30).toISOString(),
-  usuario: {
-    id: 1,
-    usuario: 'admin',
-    nombre: 'Administrador del sistema',
-    email: 'admin@escall.pe',
-    rol: 'ADMIN',
-    activo: true,
-    supervisorId: null,
-    supervisorNombre: 'Sin supervisor'
-  }
-};
-
 @Injectable({
   providedIn: 'root'
 })
@@ -31,21 +16,29 @@ export class AuthService {
 
   private loadStoredSession(): Sesion | null {
     try {
-      if (sessionStorage.getItem('escall.logged_out') === 'true') {
-        return null;
-      }
-      const raw = sessionStorage.getItem(this.storageKey) || localStorage.getItem(this.storageKey);
+      // Las sesiones persistentes de versiones anteriores se descartan. La
+      // sesión actual queda limitada a la pestaña que inició sesión.
+      localStorage.removeItem(this.storageKey);
+      const raw = sessionStorage.getItem(this.storageKey);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed.token === 'string' && parsed.usuario) {
+        if (
+          parsed &&
+          typeof parsed.token === 'string' &&
+          parsed.token.length > 0 &&
+          parsed.usuario &&
+          typeof parsed.expiraEn === 'string' &&
+          !Number.isNaN(Date.parse(parsed.expiraEn)) &&
+          Date.parse(parsed.expiraEn) > Date.now()
+        ) {
           return parsed;
         }
       }
-      sessionStorage.setItem(this.storageKey, JSON.stringify(DEFAULT_DEMO_SESSION));
-      return DEFAULT_DEMO_SESSION;
     } catch {
-      return DEFAULT_DEMO_SESSION;
+      // Si el almacenamiento no está disponible, la sesión se conserva solo
+      // en memoria después de una autenticación válida.
     }
+    return null;
   }
 
   isAuthenticated(): boolean {
@@ -57,43 +50,19 @@ export class AuthService {
     return this.isAuthenticated();
   }
 
-  setDemoSession(role: 'ADMIN' | 'SUPERVISOR' | 'ASESOR' = 'ADMIN'): Sesion {
-    sessionStorage.removeItem('escall.logged_out');
-    const demoSession: Sesion = {
-      ...DEFAULT_DEMO_SESSION,
-      usuario: {
-        ...DEFAULT_DEMO_SESSION.usuario,
-        rol: role,
-        nombre: role === 'ADMIN' ? 'Administrador del sistema' : role === 'SUPERVISOR' ? 'Sandra García' : 'Lucía Torres',
-        usuario: role === 'ADMIN' ? 'admin' : role === 'SUPERVISOR' ? 'sgarcia' : 'asesor1'
-      }
-    };
-    sessionStorage.setItem(this.storageKey, JSON.stringify(demoSession));
-    localStorage.setItem(this.storageKey, JSON.stringify(demoSession));
-    this.session.set(demoSession);
-    return demoSession;
-  }
-
   login(username: string, password: string): Observable<Sesion> {
     return this.http.post<Sesion>(`${API_URL}/auth/login`, {
       usuario: username,
       password: password
     }).pipe(
       tap(sessionData => {
-        sessionStorage.removeItem('escall.logged_out');
         sessionStorage.setItem(this.storageKey, JSON.stringify(sessionData));
-        localStorage.setItem(this.storageKey, JSON.stringify(sessionData));
         this.session.set(sessionData);
-      }),
-      catchError(() => {
-        const fallback = this.setDemoSession(username === 'sgarcia' ? 'SUPERVISOR' : 'ADMIN');
-        return of(fallback);
       })
     );
   }
 
   clearSession(): void {
-    sessionStorage.setItem('escall.logged_out', 'true');
     sessionStorage.removeItem(this.storageKey);
     localStorage.removeItem(this.storageKey);
     this.session.set(null);

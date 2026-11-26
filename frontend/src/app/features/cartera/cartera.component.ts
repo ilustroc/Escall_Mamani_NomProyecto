@@ -22,11 +22,8 @@ import { StatusBadgeComponent } from '../../shared/components/badge/status-badge
             <span class="text-xs text-slate-500 font-mono">Asignación Activa</span>
           </div>
           <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-1">
-            Cola de Gestión de Cartera
+            Cola de Gestión
           </h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Prioriza contactos, registra acuerdos y gestiona compromisos de pago sin fricción.
-          </p>
         </div>
 
         <div class="flex items-center gap-3">

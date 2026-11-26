@@ -11,7 +11,16 @@ import { ImportacionesPage } from '../src/app/pages/importaciones/importaciones'
 import { ReportesPage } from '../src/app/pages/reportes/reportes';
 import { UsuariosPage } from '../src/app/pages/usuarios/usuarios';
 function crear<T>(Clase:new()=>T,api:any,rol='ADMIN'):T{
- const env=createEnvironmentInjector([{provide:FormBuilder,useValue:new FormBuilder()},{provide:OperacionesService,useValue:api},{provide:AuthService,useValue:{sesion:signal({usuario:{id:1,rol}})}}],Injector.NULL as any);
+ const servicio={
+  ...api,
+  getBatchLoads:api.getBatchLoads??api.cargas??(()=>of([])),
+  importData:api.importData??api.importar??(()=>of(null)),
+  getFilterOptions:api.getFilterOptions??api.filtros??(()=>of({carteras:[],cosechas:[],asesores:[]})),
+  getReport:api.getReport??api.reporte??(()=>of([])),
+  getUsers:api.getUsers??api.usuarios??(()=>of([])),
+  getSupervisors:api.getSupervisors??api.supervisores??(()=>of([]))
+ };
+ const env=createEnvironmentInjector([{provide:FormBuilder,useValue:new FormBuilder()},{provide:OperacionesService,useValue:servicio},{provide:AuthService,useValue:{sesion:signal({usuario:{id:1,rol}})}}],Injector.NULL as any);
  return runInInjectionContext(env,()=>new Clase());
 }
 const carga={id:2,tipo:'ASIGNACION',total:3,aceptados:1,rechazados:2,errores:['Fila 3: duplicada'],nombreArchivo:'test.csv',usuario:'admin',creadoEn:'2026-11-18T00:00:00Z'};

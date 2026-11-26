@@ -8,11 +8,8 @@
         <span class="text-xs text-slate-500 font-mono">Procesamiento por Lotes</span>
       </div>
       <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-1">
-        Importación Masiva de Archivos
+        Importar archivos
       </h1>
-      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-        Carga masiva de asignaciones de cartera o abonos bancarios con validación por fila y bitácora de errores.
-      </p>
     </div>
 
     <div class="flex items-center gap-2.5">
@@ -30,14 +27,14 @@
     <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
       <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
-        Configuración de Carga por Lote
+        Configuración
       </h3>
       <span class="text-xs text-slate-400">Formato: UTF-8 (.csv, .txt)</span>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
       <div>
-        <label for="carga-tipo" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de Lote a Procesar *</label>
+        <label for="carga-tipo" class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de carga *</label>
         <select id="carga-tipo"
                 [value]="batchType()"
                 (change)="changeBatchType($any($event.target).value)"
@@ -60,7 +57,7 @@
     </div>
 
     <div>
-      <label for="carga-archivo" class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Seleccionar Archivo de Datos *</label>
+      <label for="carga-archivo" class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Archivo *</label>
       <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 text-center hover:border-indigo-400 transition-colors">
         <input #fileInput id="carga-archivo" type="file" accept=".csv,.txt,text/csv,text/plain" (change)="onFileSelected($event)" [disabled]="isProcessing()" class="hidden" />
         <label for="carga-archivo" class="cursor-pointer flex flex-col items-center justify-center gap-2">
@@ -69,8 +66,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
           </div>
-          <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Haz clic para buscar tu archivo</span>
-          <span class="text-[11px] text-slate-400">Archivos CSV o TXT delimitados por comas o punto y coma (máx. 10MB)</span>
+          <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Seleccionar archivo</span>
+          <span class="text-[11px] text-slate-400">CSV o TXT · máximo 10 MB</span>
         </label>
       </div>
     </div>

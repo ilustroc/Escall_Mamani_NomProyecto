@@ -53,11 +53,8 @@ export interface PriorityAlert {
             <span class="text-xs text-slate-500 font-mono">Indicadores Ejecutivos</span>
           </div>
           <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-1">
-            Tablero de Indicadores y Control Gerencial
+            Dashboard
           </h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Monitoreo consolidado de cartera, efectividad de contacto, tramos de mora y productividad de asesores.
-          </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">

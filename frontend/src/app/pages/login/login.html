@@ -12,7 +12,7 @@
         Iniciar Sesión
       </h1>
       <p class="text-xs text-slate-500 mt-0.5">
-        Accede con tus credenciales seguras para gestionar la cartera asignada.
+        Ingresa tus credenciales para continuar.
       </p>
     </div>
 
@@ -24,7 +24,7 @@
                  type="text"
                  formControlName="usuario"
                  autocomplete="username"
-                 placeholder="Ej. admin o sgarcia"
+                 placeholder="Tu usuario"
                  class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-colors" />
           @if (loginForm.controls.usuario.touched && loginForm.controls.usuario.invalid) {
             <p class="text-rose-500 text-[11px] mt-1">Por favor ingresa tu nombre de usuario.</p>
@@ -63,13 +63,6 @@
         </button>
       </form>
 
-      <div class="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-[11px] text-slate-400 space-y-2">
-        <button type="button" (click)="loginAsDemo()"
-                class="w-full py-2 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium transition-colors">
-          Ingresar rápido con cuenta Demo (Admin)
-        </button>
-        <p>Demo: <strong class="text-slate-600 dark:text-slate-300 font-mono">admin</strong> / <strong class="text-slate-600 dark:text-slate-300 font-mono">Clave12345</strong></p>
-      </div>
     </div>
   </div>
 

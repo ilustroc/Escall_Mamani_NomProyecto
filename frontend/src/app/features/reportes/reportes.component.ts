@@ -24,11 +24,8 @@ import {
             <span class="text-xs text-slate-500 font-mono">Auditoría en Línea</span>
           </div>
           <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mt-1">
-            Gestión y Reportes de Cobranza
+            Reportes
           </h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Módulo interactivo con operaciones CRUD, filtrado dinámico multicriterio y exportación de registros de gestión.
-          </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5">
