@@ -62,26 +62,9 @@ import { Rol } from '../../core/models';
         </div>
 
         <div class="space-y-1">
-          <div class="px-2 pb-1.5 text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase flex items-center justify-between">
-            <span>Integración Backend</span>
-            <span class="text-[9px] px-1 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 font-mono">REST</span>
+          <div class="px-2 pb-1.5 text-[10px] font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
+            Administración
           </div>
-
-          <a routerLink="/conexion" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
-             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>Estado Conexión (S14)</span>
-          </a>
-
-          <a routerLink="/clientes" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
-             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
-            <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <span>Buscar Clientes REST</span>
-          </a>
 
           <a *ngIf="hasAnyRole('ADMIN')" routerLink="/importaciones" routerLinkActive="bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium"
              class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 transition-colors">

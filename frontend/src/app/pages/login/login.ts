@@ -71,6 +71,15 @@ export class LoginPage {
       });
   }
 
+  loginAsDemo(): void {
+    const session = this.authService.setDemoSession('ADMIN');
+    const redirectUrl = this.route.snapshot.queryParamMap.get('volver');
+    const destination = redirectUrl?.startsWith('/') && !redirectUrl.startsWith('//')
+      ? redirectUrl
+      : '/dashboard';
+    void this.router.navigateByUrl(destination);
+  }
+
   entrar(): void {
     this.submitLogin();
   }
